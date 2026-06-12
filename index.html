@@ -1,68 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>t2 — Repo Server</title>
-<style>
-  :root { color-scheme: light dark; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 3rem 1.25rem;
-    line-height: 1.6;
-    color: CanvasText;
-    background: Canvas;
-  }
-  h1 { color: #ce422b; }
-  a { color: #ce422b; }
-  ul { margin: .5rem 0; padding-left: 1.25rem; }
-  li { margin: .35rem 0; }
-  .folder {
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: .9em;
-    color: light-dark(#555, #aaa);
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>t2 — Repo Server</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg:     light-dark(#f5f5f5, #111);
+      --fg:     light-dark(#1a1a1a, #d4d4d4);
+      --muted:  light-dark(#666,    #888);
+      --border: light-dark(#ddd,    #2a2a2a);
+      --hover:  light-dark(#e8e8e8, #1e1e1e);
+      --accent: light-dark(#0066cc, #9cdcfe);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100dvh;
+      padding: 80px;
+    }
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    nav a {
+      display: block;
+      width: fit-content;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--accent);
+      text-decoration: none;
+      transition: background .1s, border-color .1s;
+    }
+    nav a:hover {
+      background: var(--hover);
+      border-color: var(--accent);
+    }
+    .nav-group summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--fg);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    .nav-group summary::-webkit-details-marker { display: none; }
+    .nav-group summary .nav-chevron {
+      flex-shrink: 0;
+      color: var(--muted);
+      transition: transform .1s;
+    }
+    .nav-group[open] summary .nav-chevron {
+      transform: rotate(90deg);
+    }
+    .nav-group-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+      padding-left: 20px;
+      border-left: 1px solid var(--border);
+    }
+    .section-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 8px;
+      margin-bottom: 2px;
+    }
+    .section-label:first-child {
+      margin-top: 0;
+    }
+    .nav-root {
+      margin-top: 4px;
+    }
+  </style>
 </head>
 <body>
-<h1>🦀 t2 repo server</h1>
-<p>Served by the Rust file server in <code>server/</code> on port 8008.</p>
-<ul>
-  <li>
-    <span class="folder">Admin/repo-info/</span>
-    <ul>
-      <li><a href="/Admin/repo-info/repo-info.html">Repo Info</a></li>
-    </ul>
-  </li>
-  <li>
-    <span class="folder">docs/install-rust/</span>
-    <ul>
-      <li><a href="/docs/install-rust/">Installing Rust on a New Mac</a></li>
-    </ul>
-  </li>
-  <li>
-    <span class="folder">docs/macOS-reset-26.6/</span>
-    <ul>
-      <li><a href="/docs/macOS-reset-26.6/">macOS Reset 26.6</a></li>
-      <li><a href="/docs/macOS-reset-26.6/1.1-one/">1 — macOS Reset</a></li>
-      <li><a href="/docs/macOS-reset-26.6/1.1-one-md/">1 — macOS Reset (markdown)</a></li>
-      <li><a href="/docs/macOS-reset-26.6/rust-install/">Rust macOS Reset Guide</a></li>
-    </ul>
-  </li>
-  <li>
-    <span class="folder">docs/single-file-rust-scripts/</span>
-    <ul>
-      <li><a href="/docs/single-file-rust-scripts/">Single-File Rust Scripts</a></li>
-    </ul>
-  </li>
-  <li>
-    <span class="folder">/</span>
-    <ul>
-      <li><a href="/README.md">README</a></li>
-    </ul>
-  </li>
-</ul>
+  <nav>
+    <details class="nav-group" open>
+      <summary><span class="iconify nav-chevron" data-icon="mdi:chevron-right" aria-hidden="true"></span>APPS</summary>
+      <div class="nav-group-body">
+        <p class="section-label">dir-scanner-web</p>
+        <a href="/APPS/dir-scanner-web/">Directory Scanner Web</a>
+      </div>
+    </details>
+
+    <details class="nav-group" open>
+      <summary><span class="iconify nav-chevron" data-icon="mdi:chevron-right" aria-hidden="true"></span>Admin</summary>
+      <div class="nav-group-body">
+        <p class="section-label">repo-info</p>
+        <a href="/Admin/repo-info/repo-info.html">Repo Info</a>
+      </div>
+    </details>
+
+    <details class="nav-group" open>
+      <summary><span class="iconify nav-chevron" data-icon="mdi:chevron-right" aria-hidden="true"></span>docs</summary>
+      <div class="nav-group-body">
+        <p class="section-label">install-rust</p>
+        <a href="/docs/install-rust/">Installing Rust on a New Mac</a>
+
+        <p class="section-label">macOS-reset-26.6</p>
+        <a href="/docs/macOS-reset-26.6/">macOS Reset 26.6</a>
+        <a href="/docs/macOS-reset-26.6/1.1-one/">1 — macOS Reset</a>
+        <a href="/docs/macOS-reset-26.6/rust-install/">Rust macOS Reset Guide</a>
+
+        <p class="section-label">single-file-rust-scripts</p>
+        <a href="/docs/single-file-rust-scripts/">Single-File Rust Scripts</a>
+      </div>
+    </details>
+
+    <details class="nav-group">
+      <summary><span class="iconify nav-chevron" data-icon="mdi:chevron-right" aria-hidden="true"></span>Archive</summary>
+      <div class="nav-group-body">
+        <p class="section-label">dir-scanner-tui</p>
+        <a href="/Archive/dir-scanner-tui/">Directory Scanner TUI</a>
+        <p class="section-label">1.1-one-md</p>
+        <a href="/Archive/1.1-one-md/">1 — macOS Reset (markdown)</a>
+      </div>
+    </details>
+
+    <div class="nav-root">
+      <a href="/README.md">README</a>
+    </div>
+  </nav>
+  <script src="https://cdn.jsdelivr.net/npm/@iconify/iconify@3.1.1/dist/iconify.min.js"></script>
 </body>
 </html>

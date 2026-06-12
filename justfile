@@ -39,7 +39,19 @@ serve:
 test-tui:
     scripts/test-tui/test.rs
 
-# --- CSS ---
+# --- directory scanner TUI ---
+
+# Run the macOS reset directory scanner TUI.
+dir-scanner-tui *args:
+    cargo run --release --manifest-path Archive/dir-scanner-tui/Cargo.toml -- {{args}}
+
+# --- directory scanner web UI ---
+
+# Run the directory scanner web UI on http://127.0.0.1:8011.
+dir-scanner-web:
+    cargo run --release --manifest-path APPS/dir-scanner-web/Cargo.toml
+
+# --- CSS formatting ---
 
 # Format CSS in compact style (short rules on one line).
 format-css *paths:
@@ -50,7 +62,7 @@ format-css *paths:
 format-css-check *paths:
     uv run scripts/format-css.py --check {{paths}}
 
-# --- HTML ---
+# --- HTML formatting ---
 
 # Format HTML in compact style (short elements on one line).
 format-html *paths:
@@ -61,7 +73,7 @@ format-html *paths:
 format-html-check *paths:
     uv run scripts/format-html.py --check {{paths}}
 
-# --- Markdown ---
+# --- Markdown formatting ---
 
 # Format Markdown with mdformat (GFM tables, frontmatter).
 format-md *paths:

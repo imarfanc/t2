@@ -56,21 +56,53 @@
 <h2>1. Install Xcode Command Line Tools</h2>
 <p>Rust needs Apple's linker and C toolchain:</p>
 <pre><code class="language-bash">xcode-select --install</code></pre>
-<p>Silent alternative via <code>softwareupdate</code> (no GUI dialog; same technique Homebrew uses in non-interactive mode):</p>
-<pre><code class="language-bash"># Skip if already installed
-xcode-select -p &gt;/dev/null 2&gt;&amp;1 &amp;&amp; echo &quot;CLT already installed&quot; || {
-  # Trick the system into listing the CLT package
-  touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+<p>Silent alternative via <code>softwareupdate</code> (no GUI dialog; same technique Homebrew uses in non-interactive mode). Paste the whole heredoc so comments are handled safely in zsh:</p>
+<pre><code class="language-bash">zsh &lt;&lt;&#x27;ZSH&#x27;
+set -e
 
-  # Find the label
-  CLT=$(softwareupdate -l | grep -o &quot;Label: Command Line Tools for Xcode-.*&quot; | sed &#x27;s/^Label: //&#x27; | tail -1)
+# Skip if already installed
+if xcode-select -p &gt;/dev/null 2&gt;&amp;1; then
+  echo &quot;✓ CLT already installed: $(xcode-select -p)&quot;
+  exit 0
+fi
 
-  # Install silently (needs sudo, no GUI)
-  sudo softwareupdate -i &quot;$CLT&quot; --verbose
+# Trick the system into listing the CLT package
+TRIGGER=/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+touch &quot;$TRIGGER&quot;
+trap &#x27;rm -f &quot;$TRIGGER&quot;&#x27; EXIT
 
-  # Clean up
-  rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
-}</code></pre>
+# Find the newest CLT label
+CLT=$(softwareupdate -l 2&gt;/dev/null \
+  | grep -o &#x27;Label: Command Line Tools for Xcode.*&#x27; \
+  | sed &#x27;s/^Label: //&#x27; \
+  | sort -V | tail -1)
+
+if [ -z &quot;$CLT&quot; ]; then
+  echo &quot;✗ No CLT package found in softwareupdate catalog.&quot; &gt;&amp;2
+  echo &quot;  Fallback: run  xcode-select --install&quot; &gt;&amp;2
+  exit 1
+fi
+
+echo &quot;Installing: $CLT&quot;
+
+# Install silently (needs sudo, no GUI)
+sudo softwareupdate -i &quot;$CLT&quot; --verbose
+
+# Verify
+xcode-select -p &gt;/dev/null 2&gt;&amp;1 \
+  &amp;&amp; echo &quot;✓ Installed: $(xcode-select -p)&quot; \
+  || { echo &quot;✗ Install failed.&quot; &gt;&amp;2; exit 1; }
+ZSH</code></pre>
+<h3>Debugging: see what the catalog offers</h3>
+<p>The CLT package only appears in <code>softwareupdate -l</code> while the trigger file exists. To inspect the catalog manually:</p>
+<pre><code class="language-bash">touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+softwareupdate -l</code></pre>
+<p>Example output on macOS Tahoe 26.5:</p>
+<pre><code class="language-text">Software Update found the following new or updated software:
+* Label: Command Line Tools for Xcode 26.5-26.5
+        Title: Command Line Tools for Xcode 26.5, Version: 26.5, Size: 920416KiB, Recommended: YES,</code></pre>
+<p>Note the label format changed: older macOS used <code>Command Line Tools for Xcode-15.3</code> (hyphen), Tahoe 26.x uses <code>Command Line Tools for Xcode 26.5-26.5</code> (space). The grep pattern above matches both. Remove the trigger file when done:</p>
+<pre><code class="language-bash">rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress</code></pre>
 
 <h2>2. Install Rust with rustup</h2>
 <p><a href="https://rustup.rs">rustup</a> is the official installer and toolchain manager:</p>
