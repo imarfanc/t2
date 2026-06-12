@@ -17,16 +17,52 @@
   }
   h1 { color: #ce422b; }
   a { color: #ce422b; }
-  li { margin: .4rem 0; }
+  ul { margin: .5rem 0; padding-left: 1.25rem; }
+  li { margin: .35rem 0; }
+  .folder {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .9em;
+    color: light-dark(#555, #aaa);
+  }
 </style>
 </head>
 <body>
 <h1>🦀 t2 repo server</h1>
 <p>Served by the Rust file server in <code>server/</code> on port 8008.</p>
 <ul>
-  <li><a href="/docs/install-rust/">How to install Rust on a new Mac</a></li>
-  <li><a href="/docs/single-file-rust-scripts/">How single-file Rust scripts work</a></li>
-  <li><a href="/README.md">README</a></li>
+  <li>
+    <span class="folder">Admin/repo-info/</span>
+    <ul>
+      <li><a href="/Admin/repo-info/repo-info.html">Repo Info</a></li>
+    </ul>
+  </li>
+  <li>
+    <span class="folder">docs/install-rust/</span>
+    <ul>
+      <li><a href="/docs/install-rust/">Installing Rust on a New Mac</a></li>
+    </ul>
+  </li>
+  <li>
+    <span class="folder">docs/macOS-reset-26.6/</span>
+    <ul>
+      <li><a href="/docs/macOS-reset-26.6/">macOS Reset 26.6</a></li>
+      <li><a href="/docs/macOS-reset-26.6/1.1-one/">1 — macOS Reset</a></li>
+      <li><a href="/docs/macOS-reset-26.6/1.1-one-md/">1 — macOS Reset (markdown)</a></li>
+      <li><a href="/docs/macOS-reset-26.6/rust-install/">Rust macOS Reset Guide</a></li>
+    </ul>
+  </li>
+  <li>
+    <span class="folder">docs/single-file-rust-scripts/</span>
+    <ul>
+      <li><a href="/docs/single-file-rust-scripts/">Single-File Rust Scripts</a></li>
+    </ul>
+  </li>
+  <li>
+    <span class="folder">/</span>
+    <ul>
+      <li><a href="/README.md">README</a></li>
+    </ul>
+  </li>
 </ul>
 </body>
 </html>

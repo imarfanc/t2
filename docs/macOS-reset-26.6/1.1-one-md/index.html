@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 — macOS Reset (markdown)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 5rem;
+    line-height: 1.6;
+    color: CanvasText;
+    background: Canvas;
+  }
+  h1 { border-bottom: 2px solid #ce422b; padding-bottom: .4rem; }
+  h2 { margin-top: 2.5rem; color: #ce422b; }
+  h3 { margin-top: 1.75rem; }
+  a { color: #ce422b; }
+  code {
+    background: light-dark(#f4f4f4, #2a2a2a);
+    padding: .15em .4em;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .9em;
+  }
+  code.copyable {
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color .1s ease, background .1s ease;
+  }
+  code.copyable:hover {
+    border-color: light-dark(#ccc, #555);
+  }
+  code.copyable.copied {
+    border-color: #4a9c5e;
+    background: light-dark(#f0fdf4, #1f2a22);
+  }
+  pre {
+    position: relative;
+    max-height: 68vh;
+    overflow: auto;
+    padding: 1rem;
+    border: 1px solid light-dark(#ddd, #444);
+    border-radius: 8px;
+    background: light-dark(#f0f0f0, #252525);
+  }
+  pre code {
+    display: block;
+    min-width: max-content;
+    padding: 0;
+    background: none;
+  }
+  ul { margin: .5rem 0 1rem; }
+  li { margin: .35rem 0; }
+  .intro {
+    border-left: 4px solid #ce422b;
+    padding: .65rem 1rem;
+    border-radius: 0 8px 8px 0;
+    background: light-dark(rgba(206,66,43,.08), rgba(206,66,43,.18));
+  }
+  .copy-btn {
+    position: sticky;
+    z-index: 2;
+    top: 6px;
+    left: calc(100% - 64px);
+    float: right;
+    margin: -4px -4px 4px 8px;
+    padding: 4px 8px;
+    font: 11px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    border: 1px solid light-dark(#ccc, #555);
+    border-radius: 4px;
+    background: light-dark(#fff, #2f2f2f);
+    color: light-dark(#444, #ccc);
+    cursor: pointer;
+    opacity: .8;
+  }
+  .copy-btn:hover { opacity: 1; }
+  .copy-btn.copied {
+    border-color: #4a9c5e;
+    color: #4a9c5e;
+    opacity: 1;
+  }
+  .loading, .error { padding: 2rem 0; }
+  .error { color: #c33; }
+</style>
+<link rel="stylesheet" href="/docs/_shared/code-highlight.css">
+</head>
+<body>
+<p><a href="/docs/macOS-reset-26.6/">← Back to macOS Reset 26.6</a></p>
+<h1>1</h1>
+<p class="intro" id="intro">Loading…</p>
+<main id="content"><p class="loading">Loading markdown…</p></main>
+
+<script>
+(function () {
+  const sourceUrl = 'md-content.md';
+  const content = document.getElementById('content');
+  const intro = document.getElementById('intro');
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function inline(text) {
+    let output = escapeHtml(text);
+    output = output.replace(/`([^`]+)`/g, '<code>$1</code>');
+    output = output.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    output = output.replace(/_([^_]+)_/g, '<em>$1</em>');
+    output = output.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    return output;
+  }
+
+  function renderMarkdown(markdown) {
+    const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+    const output = [];
+    let index = 0;
+    let inFrontmatter = lines[0] === '---';
+    let paragraph = [];
+    let listIndents = [];
+    let openLi = false;
+
+    function endListItem() {
+      if (openLi) {
+        output.push('</li>');
+        openLi = false;
+      }
+    }
+
+    function closeListsUntil(indent) {
+      while (listIndents.length && listIndents[listIndents.length - 1] > indent) {
+        endListItem();
+        output.push('</ul>');
+        listIndents.pop();
+      }
+      if (openLi && listIndents.length && listIndents[listIndents.length - 1] === indent) {
+        endListItem();
+      }
+    }
+
+    function flushLists() {
+      closeListsUntil(-1);
+      while (listIndents.length) {
+        endListItem();
+        output.push('</ul>');
+        listIndents.pop();
+      }
+    }
+
+    function flushParagraph() {
+      if (paragraph.length) {
+        output.push(`<p>${inline(paragraph.join(' '))}</p>`);
+        paragraph = [];
+      }
+    }
+
+    while (index < lines.length) {
+      const line = lines[index];
+
+      if (inFrontmatter) {
+        if (index > 0 && line === '---') inFrontmatter = false;
+        index++;
+        continue;
+      }
+
+      if (line.startsWith('```')) {
+        flushParagraph();
+        flushLists();
+        const language = line.slice(3).trim() || 'text';
+        const code = [];
+        index++;
+        while (index < lines.length && !lines[index].startsWith('```')) {
+          code.push(lines[index]);
+          index++;
+        }
+        output.push(
+          `<pre><code class="language-${escapeHtml(language)}">${escapeHtml(code.join('\n'))}</code></pre>`
+        );
+        index++;
+        continue;
+      }
+
+      const heading = line.match(/^(#{1,3})\s+(.+)$/);
+      if (heading) {
+        flushParagraph();
+        flushLists();
+        const level = heading[1].length;
+        if (level > 1) output.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+        index++;
+        continue;
+      }
+
+      const bullet = line.match(/^(\s*)-\s+(.+)$/);
+      if (bullet) {
+        flushParagraph();
+        const indent = bullet[1].length;
+        closeListsUntil(indent);
+        if (!listIndents.length || indent > listIndents[listIndents.length - 1]) {
+          output.push('<ul>');
+          listIndents.push(indent);
+        }
+        output.push(`<li>${inline(bullet[2])}`);
+        openLi = true;
+        index++;
+        continue;
+      }
+
+      if (!line.trim()) {
+        flushParagraph();
+        flushLists();
+      } else {
+        flushLists();
+        paragraph.push(line.trim());
+      }
+      index++;
+    }
+
+    flushParagraph();
+    flushLists();
+    return output.join('\n');
+  }
+
+  function parseFrontmatter(markdown) {
+    if (!markdown.startsWith('---\n')) return null;
+    const end = markdown.indexOf('\n---\n', 4);
+    if (end === -1) return null;
+    const block = markdown.slice(4, end);
+    const description = block.match(/^description:\s*"?([^"\n]+)"?/m);
+    return description ? description[1] : null;
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (_) {
+      const area = document.createElement('textarea');
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+  }
+
+  function setupCopyButtons() {
+    document.querySelectorAll('#content pre').forEach(pre => {
+      if (pre.querySelector('.copy-btn')) return;
+
+      const button = document.createElement('button');
+      button.className = 'copy-btn';
+      button.textContent = 'Copy';
+      button.setAttribute('aria-label', 'Copy code to clipboard');
+
+      button.addEventListener('click', async () => {
+        await copyText(pre.querySelector('code').textContent);
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          button.classList.remove('copied');
+        }, 1600);
+      });
+
+      pre.prepend(button);
+    });
+
+    document.querySelectorAll('#content code').forEach(code => {
+      if (code.closest('pre')) return;
+
+      code.classList.add('copyable');
+      code.title = 'Click to copy';
+      code.setAttribute('role', 'button');
+      code.setAttribute('tabindex', '0');
+
+      async function copyInline() {
+        await copyText(code.textContent);
+        code.classList.add('copied');
+        const original = code.title;
+        code.title = 'Copied!';
+        setTimeout(() => {
+          code.classList.remove('copied');
+          code.title = original;
+        }, 1600);
+      }
+
+      code.addEventListener('click', copyInline);
+      code.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          copyInline();
+        }
+      });
+    });
+  }
+
+  fetch(sourceUrl)
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    })
+    .then(markdown => {
+      const description = parseFrontmatter(markdown);
+      intro.textContent = description || 'Rendered from md-content.md';
+      content.innerHTML = renderMarkdown(markdown);
+      setupCopyButtons();
+      const highlighter = document.createElement('script');
+      highlighter.src = '/docs/_shared/code-highlight.js';
+      document.body.appendChild(highlighter);
+    })
+    .catch(error => {
+      intro.textContent = 'Could not load markdown source.';
+      content.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`;
+    });
+})();
+</script>
+</body>
+</html>

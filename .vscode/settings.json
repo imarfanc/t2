@@ -41,9 +41,9 @@
   "editor.accessibilitySupport": "off",
 
   // ╭────────────────────────── Formatting ────────────────────────────╮
-  "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "file",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": false,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
   "prettier.configPath": ".prettierrc.json",
   "prettier.enableDebugLogs": true,
   "prettier.resolveGlobalModules": false,
@@ -76,7 +76,7 @@
   // ╭──────────────────────── Language Tools ──────────────────────────╮
   "deno.enable": true,
   "deno.lint": true,
-  "deno.format": true,
+  "deno.format": false,
   "python.defaultInterpreterPath": "/Users/arfan/miniconda3/bin/python",
   "go.toolsManagement.autoUpdate": true,
   "svelte.enable-ts-plugin": true,
@@ -85,49 +85,31 @@
 
   // ╭────────────────────── Language Formatting ───────────────────────╮
   "[html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[css]": {
-    "editor.defaultFormatter": "denoland.vscode-deno",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSave": false
   },
 
   // ╭──────────────────── Markdown Configuration ─────────────────────╮
@@ -136,9 +118,7 @@
     "editor.unicodeHighlight.invisibleCharacters": false,
     "diffEditor.ignoreTrimWhitespace": false,
     "editor.wordWrap": "on",
-    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file",
+    "editor.formatOnSave": false,
     "editor.quickSuggestions": {
       "comments": "off",
       "strings": "off",

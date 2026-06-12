@@ -1,0 +1,17 @@
+# repo-info config — read by the repo server when generating Admin/repo-info/repo-info.yaml
+
+# Folders to skip entirely (not scanned, not shown, not counted)
+ignore_folders:
+  - .git
+  - builds
+  - target
+
+# Files to skip entirely (path relative to repo root, or bare name at any depth)
+ignore_files:
+  - tmp/tmp.css
+
+# Number of recent commits to include in the snapshot
+history_limit: 20
+
+# Show commit bodies expanded by default on Admin/repo-info/repo-info.html
+history_expanded: false

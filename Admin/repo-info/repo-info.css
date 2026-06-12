@@ -1,0 +1,94 @@
+:root {
+  --bg: #0f1117; --card: #1a1d27; --border: #2a2e3c;
+  --text: #e6e8ef; --muted: #8b90a1; --accent: #7aa2f7; --green: #9ece6a;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body { font-family: ui-sans-serif, -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; max-width: 880px; margin: 0 auto; }
+h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+.sub { color: var(--muted); margin-bottom: 1.5rem; font-size: .9rem; line-height: 1.5; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+.card .label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+.card .value { font-size: 1.5rem; font-weight: 600; margin-top: .25rem; }
+h2 { font-size: 1.1rem; margin: 1.5rem 0 .75rem; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.5rem 0 .75rem; }
+.section-head h2 { margin: 0; }
+.section-head button { font: inherit; font-size: .8rem; color: var(--accent); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: .35rem .65rem; cursor: pointer; white-space: nowrap; }
+.section-head button:hover { border-color: var(--accent); }
+table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+th, td { text-align: left; padding: .6rem .9rem; font-size: .9rem; }
+th { color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+tr + tr td { border-top: 1px solid var(--border); }
+.bar { height: 6px; background: #2a2e3c; border-radius: 3px; overflow: hidden; min-width: 120px; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.size { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.note { color: var(--muted); font-size: .8rem; margin-top: 1rem; }
+code { background: #232634; padding: .1em .4em; border-radius: 4px; font-size: .85em; }
+#history td:last-child { min-width: 12rem; }
+.history-toggle {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.history-toggle .chev { color: var(--muted); font-size: .8em; }
+tr.history-head td { vertical-align: top; }
+tr.history-head:has(+ tr.history-detail:not([hidden])) td { border-bottom: none; }
+tr.history-detail td {
+  padding-top: 0;
+  border-top: none;
+}
+.commit-body {
+  margin: 0 0 .25rem;
+  padding: .6rem .8rem;
+  max-width: 100%;
+  background: #141722;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.commit-body-compact,
+.commit-body-pre {
+  margin: 0;
+  padding: 0;
+  font-size: .68rem;
+  font-weight: 400;
+  white-space: pre;
+  overflow-x: auto;
+  word-break: normal;
+  font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  color: var(--text);
+  background: transparent;
+  border: none;
+}
+.commit-body-compact { line-height: 1.05; font-size: .62rem; }
+.commit-body-pre { line-height: 1.45; font-size: .75rem; color: var(--muted); }
+.commit-body-text + .commit-body-table-wrap,
+.commit-body-table-wrap + .commit-body-text { margin-top: .65rem; }
+.commit-body-table-wrap { overflow-x: auto; max-width: 100%; }
+.commit-body-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+.commit-body-table th,
+.commit-body-table td {
+  border: 1px solid var(--border);
+  padding: .35rem .55rem;
+  text-align: left;
+  vertical-align: top;
+}
+.commit-body-table th {
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+  color: var(--text);
+}
+.commit-body-table td { color: var(--muted); }
+#error { color: #f7768e; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; display: none; }

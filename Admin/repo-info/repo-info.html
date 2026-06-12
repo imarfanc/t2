@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>t2 — Repo Info</title>
+<link rel="stylesheet" href="repo-info.css">
+</head>
+<body>
+<h1 id="title">repo info</h1>
+<p class="sub" id="sub">loading…</p>
+<div id="error"></div>
+
+<div class="cards" id="cards"></div>
+
+<h2>Root folders</h2>
+<table id="dirs"><tr><th>Folder</th><th>Size</th><th></th><th class="num">Files</th></tr></table>
+
+<h2>Root files</h2>
+<table id="files"><tr><th>File</th><th>Size</th></tr></table>
+
+<h2>Ignored folders</h2>
+<table id="ign-dirs"><tr><th>Path</th><th>Size</th><th class="num">Files</th></tr></table>
+
+<h2>Ignored files</h2>
+<table id="ign-files"><tr><th>Path</th><th>Size</th></tr></table>
+
+<div class="section-head">
+  <h2>Recent commits</h2>
+  <button type="button" id="toggle-bodies" hidden>Expand all</button>
+</div>
+<table id="history"><tr><th>Hash</th><th>Date</th><th>Author</th><th>Subject</th></tr></table>
+
+<p class="note" id="note"></p>
+
+<script src="repo-info.js"></script>
+</body>
+</html>

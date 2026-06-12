@@ -3,6 +3,7 @@
 //! Ctrl+C / Ctrl+D / q = quit.
 
 mod debug;
+mod repo_info;
 
 use colored::Colorize;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
@@ -67,6 +68,21 @@ fn main() {
     let root = root.canonicalize().expect("root dir not found");
 
     diagnostics.startup(&root, &cfg.host, cfg.port, cfg.log_requests);
+
+    // Refresh Admin/repo-info/repo-info.yaml in the background so startup isn't blocked.
+    {
+        let root = root.clone();
+        thread::spawn(move || match repo_info::write_snapshot(&root) {
+            Ok(()) => print_raw(&format!(
+                "  {} Admin/repo-info/repo-info.yaml refreshed\r\n",
+                "✓".green()
+            )),
+            Err(e) => print_raw(&format!(
+                "  {} repo-info snapshot failed: {e}\r\n",
+                "!".yellow().bold()
+            )),
+        });
+    }
 
     let listener = TcpListener::bind((cfg.host.as_str(), cfg.port)).unwrap_or_else(|e| {
         eprintln!(
@@ -424,6 +440,7 @@ fn mime(path: &Path) -> &'static str {
         "css" => "text/css",
         "js" => "application/javascript",
         "json" => "application/json",
+        "yaml" | "yml" => "text/yaml; charset=utf-8",
         "md" | "txt" => "text/plain; charset=utf-8",
         "png" => "image/png",
         "jpg" | "jpeg" => "image/jpeg",
