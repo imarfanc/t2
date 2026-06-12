@@ -56,6 +56,21 @@
 <h2>1. Install Xcode Command Line Tools</h2>
 <p>Rust needs Apple's linker and C toolchain:</p>
 <pre><code class="language-bash">xcode-select --install</code></pre>
+<p>Silent alternative via <code>softwareupdate</code> (no GUI dialog; same technique Homebrew uses in non-interactive mode):</p>
+<pre><code class="language-bash"># Skip if already installed
+xcode-select -p &gt;/dev/null 2&gt;&amp;1 &amp;&amp; echo &quot;CLT already installed&quot; || {
+  # Trick the system into listing the CLT package
+  touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+
+  # Find the label
+  CLT=$(softwareupdate -l | grep -o &quot;Label: Command Line Tools for Xcode-.*&quot; | sed &#x27;s/^Label: //&#x27; | tail -1)
+
+  # Install silently (needs sudo, no GUI)
+  sudo softwareupdate -i &quot;$CLT&quot; --verbose
+
+  # Clean up
+  rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+}</code></pre>
 
 <h2>2. Install Rust with rustup</h2>
 <p><a href="https://rustup.rs">rustup</a> is the official installer and toolchain manager:</p>

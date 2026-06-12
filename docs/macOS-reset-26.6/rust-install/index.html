@@ -81,8 +81,6 @@
     color: #4a9c5e;
     opacity: 1;
   }
-  .loading, .error { padding: 2rem 0; }
-  .error { color: #c33; }
 </style>
 <link rel="stylesheet" href="/docs/_shared/code-highlight.css">
 </head>
@@ -90,139 +88,724 @@
 <p><a href="/docs/macOS-reset-26.6/">← Back to macOS Reset 26.6</a></p>
 <h1>🦀 Rust macOS Reset Guide</h1>
 <p class="intro">Official rustup installation, terminal crates, and a complete Rust directory scanner. Every code block has a copy button.</p>
-<main id="content"><p class="loading">Loading the Rust guide…</p></main>
+<main id="content">
+<h2>1. Install Xcode Command Line Tools</h2>
+<p>Rust needs a C linker, which comes with the Xcode Command Line Tools. <code>xcode-select --install</code> pops up a GUI dialog — instead, install silently via <code>softwareupdate</code> (same technique Homebrew's installer uses in non-interactive mode):</p>
+<pre><code class="language-sh"># Skip if already installed
+xcode-select -p &gt;/dev/null 2&gt;&amp;1 &amp;&amp; echo &quot;CLT already installed&quot; || {
+  # Trick the system into listing the CLT package
+  touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
 
+  # Find the label
+  CLT=$(softwareupdate -l | grep -o &quot;Label: Command Line Tools for Xcode-.*&quot; | sed &#x27;s/^Label: //&#x27; | tail -1)
+
+  # Install silently (needs sudo, no GUI)
+  sudo softwareupdate -i &quot;$CLT&quot; --verbose
+
+  # Clean up
+  rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+}</code></pre>
+<p>GUI alternative:</p>
+<pre><code class="language-sh">xcode-select --install</code></pre>
+<h2>using curl</h2>
+<p>The official Rust installer is <code>rustup</code>. Paste the complete heredoc below into zsh so comments and shell metacharacters are handled safely.</p>
+<p>Paste this whole thing:</p>
+<pre><code class="language-sh">zsh &lt;&lt;&#x27;ZSH&#x27;
+set -euo pipefail
+setopt interactivecomments 2&gt;/dev/null || true
+
+bold=$&#x27;\033[1m&#x27;
+green=$&#x27;\033[32m&#x27;
+yellow=$&#x27;\033[33m&#x27;
+red=$&#x27;\033[31m&#x27;
+blue=$&#x27;\033[34m&#x27;
+reset=$&#x27;\033[0m&#x27;
+
+ok()   { printf &quot;%s✓%s %s\n&quot; &quot;$green&quot; &quot;$reset&quot; &quot;$*&quot;; }
+warn() { printf &quot;%s!%s %s\n&quot; &quot;$yellow&quot; &quot;$reset&quot; &quot;$*&quot;; }
+fail() { printf &quot;%s✗%s %s\n&quot; &quot;$red&quot; &quot;$reset&quot; &quot;$*&quot;; exit 1; }
+
+need_cmd() {
+  command -v &quot;$1&quot; &gt;/dev/null 2&gt;&amp;1 || fail &quot;Missing required command: $1&quot;
+}
+
+need_cmd curl
+need_cmd uname
+
+ARCH=&quot;$(uname -m)&quot;
+
+case &quot;$ARCH&quot; in
+  arm64)
+    RUST_HOST=&quot;aarch64-apple-darwin&quot;
+    ;;
+  x86_64)
+    RUST_HOST=&quot;x86_64-apple-darwin&quot;
+    ;;
+  *)
+    fail &quot;Unsupported Mac architecture: $ARCH&quot;
+    ;;
+esac
+
+workdir=&quot;$HOME/Developer/rust-tmp&quot;
+mkdir -p &quot;$workdir&quot;
+
+printf &quot;\n%sRust Official Installer for macOS%s\n&quot; &quot;$bold&quot; &quot;$reset&quot;
+printf &quot;%s────────────────────────────────%s\n\n&quot; &quot;$blue&quot; &quot;$reset&quot;
+
+ok &quot;Detected architecture: $ARCH → $RUST_HOST&quot;
+
+INSTALLER=&quot;$workdir/rustup-init.sh&quot;
+INSTALLER_URL=&quot;https://sh.rustup.rs&quot;
+
+printf &quot;\nDownloading:\n%s\n\n&quot; &quot;$INSTALLER_URL&quot;
+
+curl --proto &#x27;=https&#x27; --tlsv1.2 -fL \
+  --retry 3 --connect-timeout 15 \
+  &quot;$INSTALLER_URL&quot; -o &quot;$INSTALLER&quot;
+
+test -s &quot;$INSTALLER&quot; || fail &quot;Download failed or installer is empty.&quot;
+ok &quot;Downloaded rustup installer.&quot;
+
+printf &quot;\nInstalling the stable Rust toolchain...\n&quot;
+sh &quot;$INSTALLER&quot; -y --default-toolchain stable --profile default
+
+RUST_ENV=&quot;$HOME/.cargo/env&quot;
+test -f &quot;$RUST_ENV&quot; || fail &quot;Rust environment file was not created.&quot;
+
+# shellcheck disable=SC1090
+source &quot;$RUST_ENV&quot;
+hash -r 2&gt;/dev/null || true
+rehash 2&gt;/dev/null || true
+
+rustup toolchain install stable
+rustup default stable
+rustup component add rustfmt clippy
+
+RUSTC_BIN=&quot;$(command -v rustc || true)&quot;
+CARGO_BIN=&quot;$(command -v cargo || true)&quot;
+RUSTUP_BIN=&quot;$(command -v rustup || true)&quot;
+RUSTC_VERSION=&quot;$(rustc --version 2&gt;/dev/null || true)&quot;
+CARGO_VERSION=&quot;$(cargo --version 2&gt;/dev/null || true)&quot;
+RUSTUP_VERSION=&quot;$(rustup --version 2&gt;/dev/null | head -n 1 || true)&quot;
+ACTIVE_TOOLCHAIN=&quot;$(rustup show active-toolchain 2&gt;/dev/null || true)&quot;
+HOST_TRIPLE=&quot;$(rustc -vV 2&gt;/dev/null | awk &#x27;/^host:/ { print $2 }&#x27;)&quot;
+
+printf &quot;\n%sVisual Sanity Check%s\n&quot; &quot;$bold&quot; &quot;$reset&quot;
+printf &quot;%s────────────────────%s\n&quot; &quot;$blue&quot; &quot;$reset&quot;
+
+printf &quot;%-22s %s\n&quot; &quot;Expected host:&quot; &quot;$RUST_HOST&quot;
+printf &quot;%-22s %s\n&quot; &quot;Active rustc:&quot; &quot;${RUSTC_BIN:-not found}&quot;
+printf &quot;%-22s %s\n&quot; &quot;Active cargo:&quot; &quot;${CARGO_BIN:-not found}&quot;
+printf &quot;%-22s %s\n&quot; &quot;Active rustup:&quot; &quot;${RUSTUP_BIN:-not found}&quot;
+printf &quot;%-22s %s\n&quot; &quot;rustc version:&quot; &quot;${RUSTC_VERSION:-failed}&quot;
+printf &quot;%-22s %s\n&quot; &quot;cargo version:&quot; &quot;${CARGO_VERSION:-failed}&quot;
+printf &quot;%-22s %s\n&quot; &quot;rustup version:&quot; &quot;${RUSTUP_VERSION:-failed}&quot;
+printf &quot;%-22s %s\n&quot; &quot;Toolchain:&quot; &quot;${ACTIVE_TOOLCHAIN:-failed}&quot;
+printf &quot;%-22s %s\n&quot; &quot;Host:&quot; &quot;${HOST_TRIPLE:-failed}&quot;
+
+printf &quot;\n%sPATH priority check%s\n&quot; &quot;$bold&quot; &quot;$reset&quot;
+printf &quot;%s──────────────────%s\n&quot; &quot;$blue&quot; &quot;$reset&quot;
+which -a rustc 2&gt;/dev/null | awk &#x27;{ printf &quot;%2d. %s\n&quot;, NR, $0 }&#x27; || true
+which -a cargo 2&gt;/dev/null | awk &#x27;{ printf &quot;%2d. %s\n&quot;, NR, $0 }&#x27; || true
+
+printf &quot;\n&quot;
+
+if [ &quot;$RUSTC_BIN&quot; = &quot;$HOME/.cargo/bin/rustc&quot; ]; then
+  ok &quot;Good: rustup-managed rustc is first in PATH.&quot;
+else
+  warn &quot;Rust installed, but another rustc may be first in PATH.&quot;
+  warn &quot;Open a new terminal tab, then run: which rustc &amp;&amp; rustc --version&quot;
+fi
+
+if [ &quot;$HOST_TRIPLE&quot; = &quot;$RUST_HOST&quot; ]; then
+  ok &quot;Host architecture check passed.&quot;
+else
+  fail &quot;Host mismatch. Expected $RUST_HOST but got: ${HOST_TRIPLE:-nothing}&quot;
+fi
+
+printf &quot;\n%sDone.%s Open a new terminal tab and run:\n\n&quot; &quot;$green&quot; &quot;$reset&quot;
+printf &quot;  rustc --version\n&quot;
+printf &quot;  cargo --version\n&quot;
+printf &quot;  rustup show\n\n&quot;
+ZSH</code></pre>
+<h3>Why this is better</h3>
+<ul><li>Keeps the downloaded installer under <strong><code>~/Developer/rust-tmp</code></strong></li><li>Works safely when pasted into <strong>zsh</strong></li><li>Detects Apple Silicon vs Intel Mac</li><li>Uses the official <code>rustup</code> installer</li><li>Installs the stable toolchain, Cargo, rustfmt, and Clippy</li><li>Uses rustup-managed binaries under <code>~/.cargo/bin</code></li><li>Shows a sanity-check table at the end</li><li>Shows all <code>rustc</code> and <code>cargo</code> binaries found so Homebrew or old installs are easy to spot</li></ul>
+<h2>rust terminal stack (optional)</h2>
+<p>Rust alternatives to the Charm Go stack:</p>
+<table><thead><tr><th>Crate</th><th>What it is</th><th>When you use it</th></tr></thead><tbody><tr><td><strong><a href="https://github.com/console-rs/console">console</a></strong></td><td>Terminal colors and styling</td><td>Styled headings and status messages</td></tr><tr><td><strong><a href="https://github.com/console-rs/indicatif">indicatif</a></strong></td><td>Progress bars and spinners</td><td>Long-running scans and downloads</td></tr><tr><td><strong><a href="https://github.com/Nukesor/comfy-table">comfy-table</a></strong></td><td>Styled terminal tables</td><td>Summaries, file lists, and system information</td></tr><tr><td><strong><a href="https://github.com/ratatui/ratatui">ratatui</a></strong></td><td>Full terminal UI framework</td><td>Interactive dashboards, menus, and applications</td></tr><tr><td><strong><a href="https://github.com/crossterm-rs/crossterm">crossterm</a></strong></td><td>Cross-platform terminal control</td><td>Keyboard events, raw mode, cursor control, and screen updates</td></tr></tbody></table>
+<p><strong>This doc:</strong> the backup scanner uses <strong>console</strong>, <strong>indicatif</strong>, and <strong>comfy-table</strong>. Cargo downloads the crates automatically on the first build.</p>
+<h2>backup dir</h2>
+<p>Same directory-scanner idea as <code>go.md</code>. <code>OUTPUT_DIR</code> is resolved from the current user&#x27;s home directory. The setup snippet writes a complete Cargo project under <strong><code>~/Developer/rust-tmp</code></strong> and leaves it there for subsequent runs.</p>
+<pre><code class="language-sh">TMP=&quot;$HOME/Developer/rust-tmp&quot;
+mkdir -p &quot;$TMP/src&quot;
+
+cat &gt; &quot;$TMP/Cargo.toml&quot; &lt;&lt;&#x27;TOML&#x27;
+[package]
+name = &quot;dir-scanner&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2021&quot;
+
+[dependencies]
+chrono = &quot;0.4&quot;
+comfy-table = &quot;7&quot;
+console = &quot;0.15&quot;
+indicatif = &quot;0.17&quot;
+TOML
+
+cat &gt; &quot;$TMP/src/main.rs&quot; &lt;&lt;&#x27;RUST&#x27;
+use chrono::{DateTime, Local};
+use comfy_table::{presets::UTF8_ROUND_CORNERS, Attribute, Cell, Color, Table};
+use console::Style;
+use indicatif::{ProgressBar, ProgressStyle};
+use std::collections::{HashMap, HashSet};
+use std::env;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::time::Duration;
+
+const DEFAULT_SCAN_ROOT: &amp;str = &quot;.&quot;;
+const OUTPUT_BASENAME: &amp;str = &quot;tree_output&quot;;
+const OUTPUT_EXT: &amp;str = &quot;.txt&quot;;
+const SHOW_HIDDEN: bool = true;
+const FOLLOW_SYMLINKS: bool = false;
+const SCAN_EVERYTHING: bool = false;
+const MAX_DEPTH: usize = 50;
+const TOP_N_FILES: usize = 25;
+const TOP_N_DIRS: usize = 50;
+const SAVE_OUTPUT: bool = true;
+const APPEND_TIMESTAMP_SUFFIX: bool = true;
+const HARD_DEPTH_LIMIT: usize = 200;
+
+#[derive(Clone)]
+struct EntryInfo {
+    path: PathBuf,
+    name: String,
+    is_dir: bool,
+    size: u64,
+}
+
+#[derive(Clone)]
+struct FileSize {
+    path: PathBuf,
+    size: u64,
+}
+
+struct ScanData {
+    root_path: PathBuf,
+    root_total_size: u64,
+    root_entries: Vec&lt;EntryInfo&gt;,
+    tree_lines: Vec&lt;String&gt;,
+    file_count: usize,
+    dir_count: usize,
+    scanned_file_bytes: u64,
+    max_depth_reached: usize,
+    largest_files: Vec&lt;FileSize&gt;,
+    dir_sizes: HashMap&lt;PathBuf, u64&gt;,
+}
+
+fn main() {
+    let root_arg = env::var(&quot;SCAN_ROOT&quot;).unwrap_or_else(|_| DEFAULT_SCAN_ROOT.into());
+    let root_path = match real_root(Path::new(root_arg.trim())) {
+        Ok(path) =&gt; path,
+        Err(_) =&gt; {
+            eprintln!(
+                &quot;{}&quot;,
+                Style::new()
+                    .red()
+                    .bold()
+                    .apply_to(format!(&quot;Error: {root_arg:?} is not a valid directory.&quot;))
+            );
+            std::process::exit(1);
+        }
+    };
+
+    let mode = if SCAN_EVERYTHING {
+        &quot;scan everything&quot;.to_string()
+    } else {
+        format!(&quot;max depth {MAX_DEPTH}&quot;)
+    };
+
+    let panel = Style::new().magenta().bold();
+    println!();
+    println!(&quot;{}&quot;, panel.apply_to(&quot;╭──────────────────────────────╮&quot;));
+    println!(&quot;{}&quot;, panel.apply_to(&quot;│ ◆ dir scanner                │&quot;));
+    println!(&quot;│ □ root  {:&lt;21} │&quot;, root_path.display());
+    println!(&quot;│ ◌ mode  {:&lt;21} │&quot;, mode);
+    println!(&quot;{}&quot;, panel.apply_to(&quot;╰──────────────────────────────╯&quot;));
+    println!();
+
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::with_template(&quot;{spinner:.magenta} {msg}&quot;)
+            .expect(&quot;valid spinner template&quot;)
+            .tick_strings(&amp;[&quot;⠋&quot;, &quot;⠙&quot;, &quot;⠹&quot;, &quot;⠸&quot;, &quot;⠼&quot;, &quot;⠴&quot;, &quot;⠦&quot;, &quot;⠧&quot;, &quot;⠇&quot;, &quot;⠏&quot;]),
+    );
+    spinner.set_message(&quot;scanning...&quot;);
+    spinner.enable_steady_tick(Duration::from_millis(80));
+    let data = scan_tree(&amp;root_path);
+    spinner.finish_and_clear();
+
+    let output_path = SAVE_OUTPUT.then(make_output_path);
+    let depth_label = if SCAN_EVERYTHING {
+        format!(&quot;{} (actual)&quot;, data.max_depth_reached)
+    } else {
+        format!(&quot;{MAX_DEPTH} (max)&quot;)
+    };
+
+    let mut top_files = data.largest_files.clone();
+    top_files.truncate(TOP_N_FILES);
+
+    let mut top_dirs: Vec&lt;_&gt; = data
+        .dir_sizes
+        .iter()
+        .filter(|(path, _)| *path != &amp;data.root_path)
+        .map(|(path, size)| (path.clone(), *size))
+        .collect();
+    top_dirs.sort_by(|a, b| b.1.cmp(&amp;a.1));
+    top_dirs.truncate(TOP_N_DIRS);
+
+    let system_rows = vec![
+        vec![&quot;User&quot;.into(), run(&quot;whoami&quot;, &amp;[])],
+        vec![&quot;Hostname&quot;.into(), run(&quot;hostname&quot;, &amp;[])],
+        vec![&quot;OS&quot;.into(), run(&quot;sw_vers&quot;, &amp;[&quot;-productName&quot;])],
+        vec![&quot;OS Version&quot;.into(), run(&quot;sw_vers&quot;, &amp;[&quot;-productVersion&quot;])],
+        vec![&quot;Build&quot;.into(), run(&quot;sw_vers&quot;, &amp;[&quot;-buildVersion&quot;])],
+        vec![
+            &quot;Platform&quot;.into(),
+            format!(&quot;{} {}&quot;, env::consts::OS, env::consts::ARCH),
+        ],
+        vec![&quot;User Lang&quot;.into(), env_or(&quot;LANG&quot;, &quot;—&quot;)],
+        vec![
+            &quot;Processor&quot;.into(),
+            run(&quot;sysctl&quot;, &amp;[&quot;-n&quot;, &quot;machdep.cpu.brand_string&quot;]),
+        ],
+        vec![&quot;Cores&quot;.into(), run(&quot;sysctl&quot;, &amp;[&quot;-n&quot;, &quot;hw.ncpu&quot;])],
+        vec![
+            &quot;Memory&quot;.into(),
+            run(&quot;sysctl&quot;, &amp;[&quot;-n&quot;, &quot;hw.memsize&quot;])
+                .parse::&lt;u64&gt;()
+                .map(human_size)
+                .unwrap_or_else(|_| &quot;—&quot;.into()),
+        ],
+        vec![&quot;Uptime&quot;.into(), run(&quot;uptime&quot;, &amp;[])],
+        vec![&quot;Date&quot;.into(), Local::now().to_rfc2822()],
+        vec![&quot;Home&quot;.into(), env_or(&quot;HOME&quot;, &quot;—&quot;)],
+        vec![&quot;Shell&quot;.into(), env_or(&quot;SHELL&quot;, &quot;—&quot;)],
+        vec![&quot;Term&quot;.into(), env_or(&quot;TERM&quot;, &quot;—&quot;)],
+        vec![&quot;Rust&quot;.into(), run(&quot;rustc&quot;, &amp;[&quot;--version&quot;])],
+        vec![&quot;Cargo&quot;.into(), run(&quot;cargo&quot;, &amp;[&quot;--version&quot;])],
+    ];
+
+    let output_dir = output_dir();
+    let summary_rows = vec![
+        vec![&quot;Root&quot;.into(), data.root_path.display().to_string()],
+        vec![&quot;Depth&quot;.into(), depth_label],
+        vec![&quot;Directories&quot;.into(), data.dir_count.to_string()],
+        vec![&quot;Files&quot;.into(), data.file_count.to_string()],
+        vec![
+            &quot;Scanned File Size&quot;.into(),
+            human_size(data.scanned_file_bytes),
+        ],
+        vec![&quot;Root Total Size&quot;.into(), human_size(data.root_total_size)],
+        vec![&quot;Root Items&quot;.into(), data.root_entries.len().to_string()],
+        vec![&quot;Show Hidden&quot;.into(), yes_no(SHOW_HIDDEN).into()],
+        vec![&quot;Follow Symlinks&quot;.into(), yes_no(FOLLOW_SYMLINKS).into()],
+        vec![&quot;Top Files Count&quot;.into(), TOP_N_FILES.to_string()],
+        vec![&quot;Top Dirs Count&quot;.into(), TOP_N_DIRS.to_string()],
+        vec![&quot;Save Output&quot;.into(), yes_no(SAVE_OUTPUT).into()],
+        vec![&quot;Output Dir&quot;.into(), output_dir.display().to_string()],
+        vec![
+            &quot;Output File&quot;.into(),
+            output_path
+                .as_deref()
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|| &quot;—&quot;.into()),
+        ],
+        vec![&quot;Generated&quot;.into(), Local::now().to_rfc2822()],
+    ];
+
+    let root_rows = data
+        .root_entries
+        .iter()
+        .enumerate()
+        .map(|(index, entry)| {
+            let (kind, name, size) = if entry.is_dir {
+                (
+                    &quot;□ dir&quot;.to_string(),
+                    format!(&quot;{}/&quot;, entry.name),
+                    human_size(*data.dir_sizes.get(&amp;entry.path).unwrap_or(&amp;0)),
+                )
+            } else {
+                (
+                    &quot;▪ file&quot;.to_string(),
+                    entry.name.clone(),
+                    human_size(entry.size),
+                )
+            };
+            vec![(index + 1).to_string(), kind, name, size]
+        })
+        .collect();
+
+    let top_file_rows = top_files
+        .iter()
+        .enumerate()
+        .map(|(index, file)| {
+            vec![
+                (index + 1).to_string(),
+                format!(
+                    &quot;▪ {}&quot;,
+                    file.path.file_name().unwrap_or_default().to_string_lossy()
+                ),
+                relative_path(&amp;data.root_path, &amp;file.path),
+                human_size(file.size),
+            ]
+        })
+        .collect();
+
+    let top_dir_rows = top_dirs
+        .iter()
+        .enumerate()
+        .map(|(index, (path, size))| {
+            vec![
+                (index + 1).to_string(),
+                format!(
+                    &quot;□ {}/&quot;,
+                    path.file_name().unwrap_or_default().to_string_lossy()
+                ),
+                relative_path(&amp;data.root_path, path),
+                human_size(*size),
+            ]
+        })
+        .collect();
+
+    let sections = vec![
+        render_section(&quot;▾ System Info&quot;, &amp;[&quot;Field&quot;, &quot;Value&quot;], system_rows),
+        render_section(&quot;▾ Summary&quot;, &amp;[&quot;Field&quot;, &quot;Value&quot;], summary_rows),
+        render_section(
+            &quot;▾ Root Contents&quot;,
+            &amp;[&quot;#&quot;, &quot;Type&quot;, &quot;Name&quot;, &quot;Size&quot;],
+            root_rows,
+        ),
+        render_section(
+            &amp;format!(&quot;▾ Top {TOP_N_FILES} Largest Files&quot;),
+            &amp;[&quot;#&quot;, &quot;File&quot;, &quot;Relative Path&quot;, &quot;Size&quot;],
+            top_file_rows,
+        ),
+        render_section(
+            &amp;format!(&quot;▾ Top {TOP_N_DIRS} Largest Directories&quot;),
+            &amp;[&quot;#&quot;, &quot;Directory&quot;, &quot;Relative Path&quot;, &quot;Total Size&quot;],
+            top_dir_rows,
+        ),
+        format!(
+            &quot;{}\n{}\n{}&quot;,
+            Style::new().magenta().bold().apply_to(&quot;▾ Full Tree&quot;),
+            Style::new().magenta().bold().apply_to(format!(
+                &quot;◆ {}  ◌ {}&quot;,
+                data.root_path.display(),
+                human_size(data.root_total_size)
+            )),
+            data.tree_lines.join(&quot;\n&quot;)
+        ),
+    ];
+
+    let final_output = sections.join(&quot;\n\n&quot;);
+    println!(&quot;{final_output}&quot;);
+
+    if let Some(path) = output_path {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).expect(&quot;create output directory&quot;);
+        }
+        fs::write(&amp;path, console::strip_ansi_codes(&amp;final_output).as_bytes())
+            .expect(&quot;write output file&quot;);
+        println!();
+        println!(
+            &quot;{}&quot;,
+            Style::new()
+                .green()
+                .bold()
+                .apply_to(format!(&quot;Saved: {}&quot;, path.display()))
+        );
+    }
+}
+
+fn scan_tree(root_path: &amp;Path) -&gt; ScanData {
+    let mut dir_sizes = HashMap::new();
+    let mut size_visited = HashSet::new();
+    let root_total_size =
+        scan_dir_size(root_path, &amp;mut dir_sizes, &amp;mut size_visited).unwrap_or(0);
+    let root_entries = list_dir(root_path);
+
+    let mut data = ScanData {
+        root_path: root_path.to_path_buf(),
+        root_total_size,
+        root_entries,
+        tree_lines: Vec::new(),
+        file_count: 0,
+        dir_count: 0,
+        scanned_file_bytes: 0,
+        max_depth_reached: 0,
+        largest_files: Vec::new(),
+        dir_sizes,
+    };
+
+    let mut tree_visited = HashSet::new();
+    let tree_lines = build_tree_lines(root_path, 0, &quot;&quot;, &amp;mut tree_visited, &amp;mut data);
+    data.tree_lines = tree_lines;
+    data.largest_files.sort_by(|a, b| b.size.cmp(&amp;a.size));
+    data
+}
+
+fn scan_dir_size(
+    dir: &amp;Path,
+    dir_sizes: &amp;mut HashMap&lt;PathBuf, u64&gt;,
+    visited: &amp;mut HashSet&lt;PathBuf&gt;,
+) -&gt; io::Result&lt;u64&gt; {
+    let real = fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(real) {
+        return Ok(0);
+    }
+
+    let mut total = 0;
+    for entry in list_dir(dir) {
+        if entry.is_dir {
+            total += scan_dir_size(&amp;entry.path, dir_sizes, visited).unwrap_or(0);
+        } else {
+            total += entry.size;
+        }
+    }
+    dir_sizes.insert(dir.to_path_buf(), total);
+    Ok(total)
+}
+
+fn build_tree_lines(
+    dir: &amp;Path,
+    depth: usize,
+    prefix: &amp;str,
+    visited: &amp;mut HashSet&lt;PathBuf&gt;,
+    data: &amp;mut ScanData,
+) -&gt; Vec&lt;String&gt; {
+    if depth &gt;= HARD_DEPTH_LIMIT || (!SCAN_EVERYTHING &amp;&amp; depth &gt;= MAX_DEPTH) {
+        return Vec::new();
+    }
+
+    data.max_depth_reached = data.max_depth_reached.max(depth);
+    let entries = list_dir(dir);
+    let mut lines = Vec::new();
+
+    for (index, entry) in entries.iter().enumerate() {
+        let is_last = index + 1 == entries.len();
+        let connector = if is_last { &quot;└── &quot; } else { &quot;├── &quot; };
+        let next_prefix = format!(&quot;{prefix}{}&quot;, if is_last { &quot;    &quot; } else { &quot;│   &quot; });
+
+        if entry.is_dir {
+            let real = fs::canonicalize(&amp;entry.path).unwrap_or_else(|_| entry.path.clone());
+            if !visited.insert(real) {
+                continue;
+            }
+            data.dir_count += 1;
+            let size = *data.dir_sizes.get(&amp;entry.path).unwrap_or(&amp;0);
+            lines.push(format!(
+                &quot;{prefix}{connector}□ {}/  ◌ {}&quot;,
+                entry.name,
+                human_size(size)
+            ));
+            lines.extend(build_tree_lines(
+                &amp;entry.path,
+                depth + 1,
+                &amp;next_prefix,
+                visited,
+                data,
+            ));
+        } else {
+            data.file_count += 1;
+            data.scanned_file_bytes += entry.size;
+            data.largest_files.push(FileSize {
+                path: entry.path.clone(),
+                size: entry.size,
+            });
+            lines.push(format!(
+                &quot;{prefix}{connector}▪ {}  ◌ {}&quot;,
+                entry.name,
+                human_size(entry.size)
+            ));
+        }
+    }
+    lines
+}
+
+fn list_dir(dir: &amp;Path) -&gt; Vec&lt;EntryInfo&gt; {
+    let mut entries = Vec::new();
+    let Ok(children) = fs::read_dir(dir) else {
+        return entries;
+    };
+
+    for child in children.flatten() {
+        let name = child.file_name().to_string_lossy().into_owned();
+        if !SHOW_HIDDEN &amp;&amp; name.starts_with(&#x27;.&#x27;) {
+            continue;
+        }
+
+        let path = child.path();
+        let metadata = if FOLLOW_SYMLINKS {
+            fs::metadata(&amp;path)
+        } else {
+            fs::symlink_metadata(&amp;path)
+        };
+        let Ok(metadata) = metadata else {
+            continue;
+        };
+        let is_dir = metadata.is_dir();
+
+        if is_dir
+            &amp;&amp; matches!(
+                name.as_str(),
+                &quot;.git&quot; | &quot;node_modules&quot; | &quot;.venv&quot; | &quot;__pycache__&quot; | &quot;.DS_Store&quot;
+            )
+        {
+            continue;
+        }
+
+        entries.push(EntryInfo {
+            path,
+            name,
+            is_dir,
+            size: if metadata.is_file() {
+                metadata.len()
+            } else {
+                0
+            },
+        });
+    }
+
+    entries.sort_by(|a, b| {
+        b.is_dir
+            .cmp(&amp;a.is_dir)
+            .then_with(|| a.name.to_lowercase().cmp(&amp;b.name.to_lowercase()))
+    });
+    entries
+}
+
+fn render_section(title: &amp;str, headers: &amp;[&amp;str], rows: Vec&lt;Vec&lt;String&gt;&gt;) -&gt; String {
+    let mut table = Table::new();
+    table.load_preset(UTF8_ROUND_CORNERS);
+    table.set_header(headers.iter().map(|header| {
+        Cell::new(header)
+            .fg(Color::Cyan)
+            .add_attribute(Attribute::Bold)
+    }));
+    for row in rows {
+        table.add_row(row);
+    }
+    format!(
+        &quot;{}\n{}&quot;,
+        Style::new().magenta().bold().apply_to(title),
+        table
+    )
+}
+
+fn human_size(bytes: u64) -&gt; String {
+    const UNITS: [&amp;str; 6] = [&quot;B&quot;, &quot;KB&quot;, &quot;MB&quot;, &quot;GB&quot;, &quot;TB&quot;, &quot;PB&quot;];
+    let mut size = bytes as f64;
+    let mut unit = 0;
+    while size &gt;= 1024.0 &amp;&amp; unit &lt; UNITS.len() - 1 {
+        size /= 1024.0;
+        unit += 1;
+    }
+    if unit == 0 {
+        format!(&quot;{bytes} {}&quot;, UNITS[unit])
+    } else {
+        format!(&quot;{size:.1} {}&quot;, UNITS[unit])
+    }
+}
+
+fn format_timestamp_suffix(time: DateTime&lt;Local&gt;) -&gt; String {
+    time.format(&quot;%y.%-m.%-d_%-I.%M%P&quot;).to_string()
+}
+
+fn output_dir() -&gt; PathBuf {
+    home_dir().join(&quot;Developer&quot;).join(&quot;macos-reset&quot;)
+}
+
+fn make_output_path() -&gt; PathBuf {
+    let suffix = if APPEND_TIMESTAMP_SUFFIX {
+        format!(&quot;-{}&quot;, format_timestamp_suffix(Local::now()))
+    } else {
+        String::new()
+    };
+    output_dir().join(format!(&quot;{OUTPUT_BASENAME}{suffix}{OUTPUT_EXT}&quot;))
+}
+
+fn home_dir() -&gt; PathBuf {
+    env::var_os(&quot;HOME&quot;)
+        .map(PathBuf::from)
+        .expect(&quot;HOME is not set&quot;)
+}
+
+fn relative_path(root: &amp;Path, target: &amp;Path) -&gt; String {
+    target
+        .strip_prefix(root)
+        .ok()
+        .filter(|path| !path.as_os_str().is_empty())
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|| &quot;.&quot;.into())
+}
+
+fn yes_no(value: bool) -&gt; &amp;&#x27;static str {
+    if value {
+        &quot;Yes&quot;
+    } else {
+        &quot;No&quot;
+    }
+}
+
+fn env_or(key: &amp;str, fallback: &amp;str) -&gt; String {
+    env::var(key).unwrap_or_else(|_| fallback.into())
+}
+
+fn run(command: &amp;str, args: &amp;[&amp;str]) -&gt; String {
+    Command::new(command)
+        .args(args)
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&amp;output.stdout).trim().to_string())
+        .filter(|output| !output.is_empty())
+        .unwrap_or_else(|| &quot;—&quot;.into())
+}
+
+fn real_root(path: &amp;Path) -&gt; io::Result&lt;PathBuf&gt; {
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        env::current_dir()?.join(path)
+    };
+    let resolved = fs::canonicalize(absolute)?;
+    if resolved.is_dir() {
+        Ok(resolved)
+    } else {
+        Err(io::Error::new(io::ErrorKind::InvalidInput, &quot;not a directory&quot;))
+    }
+}
+RUST</code></pre>
+<h2>first run</h2>
+<pre><code class="language-sh">cd &quot;$HOME/Developer/rust-tmp&quot; &amp;&amp; cargo run --release</code></pre>
+<p>Cargo downloads and compiles the dependencies on the first run.</p>
+<h2>subsequent run</h2>
+<pre><code class="language-sh">cd &quot;$HOME/Developer/rust-tmp&quot; &amp;&amp; cargo run --release</code></pre>
+<p>To scan another directory:</p>
+<pre><code class="language-sh">cd &quot;$HOME/Developer/rust-tmp&quot; &amp;&amp; \
+SCAN_ROOT=&quot;$HOME/Developer&quot; cargo run --release</code></pre>
+</main>
+
+<script src="/docs/_shared/code-highlight.js"></script>
 <script>
 (function () {
-  const sourceUrl = '/tmp/tmp-26.6.10/rust.md';
-  const content = document.getElementById('content');
-
-  function escapeHtml(text) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function inline(text) {
-    let output = escapeHtml(text);
-    output = output.replace(/`([^`]+)`/g, '<code>$1</code>');
-    output = output.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    output = output.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-    return output;
-  }
-
-  function renderTable(lines) {
-    const rows = lines.map(line =>
-      line.replace(/^\||\|$/g, '').split('|').map(cell => cell.trim())
-    );
-    const headers = rows[0];
-    const body = rows.slice(2);
-    return '<table><thead><tr>' +
-      headers.map(cell => `<th>${inline(cell)}</th>`).join('') +
-      '</tr></thead><tbody>' +
-      body.map(row => '<tr>' +
-        row.map(cell => `<td>${inline(cell)}</td>`).join('') +
-        '</tr>').join('') +
-      '</tbody></table>';
-  }
-
-  function renderMarkdown(markdown) {
-    const lines = markdown.replace(/\r\n/g, '\n').split('\n');
-    const output = [];
-    let index = 0;
-    let inFrontmatter = lines[0] === '---';
-    let paragraph = [];
-    let list = [];
-
-    function flushParagraph() {
-      if (paragraph.length) {
-        output.push(`<p>${inline(paragraph.join(' '))}</p>`);
-        paragraph = [];
-      }
-    }
-
-    function flushList() {
-      if (list.length) {
-        output.push('<ul>' + list.map(item => `<li>${inline(item)}</li>`).join('') + '</ul>');
-        list = [];
-      }
-    }
-
-    while (index < lines.length) {
-      const line = lines[index];
-
-      if (inFrontmatter) {
-        if (index > 0 && line === '---') inFrontmatter = false;
-        index++;
-        continue;
-      }
-
-      if (line.startsWith('```')) {
-        flushParagraph();
-        flushList();
-        const language = line.slice(3).trim() || 'text';
-        const code = [];
-        index++;
-        while (index < lines.length && !lines[index].startsWith('```')) {
-          code.push(lines[index]);
-          index++;
-        }
-        output.push(
-          `<pre><code class="language-${escapeHtml(language)}">${escapeHtml(code.join('\n'))}</code></pre>`
-        );
-        index++;
-        continue;
-      }
-
-      if (line.startsWith('|') && lines[index + 1] && /^\|\s*:?-+/.test(lines[index + 1])) {
-        flushParagraph();
-        flushList();
-        const tableLines = [];
-        while (index < lines.length && lines[index].startsWith('|')) {
-          tableLines.push(lines[index]);
-          index++;
-        }
-        output.push(renderTable(tableLines));
-        continue;
-      }
-
-      const heading = line.match(/^(#{1,3})\s+(.+)$/);
-      if (heading) {
-        flushParagraph();
-        flushList();
-        const level = heading[1].length;
-        if (level > 1) output.push(`<h${level}>${inline(heading[2])}</h${level}>`);
-        index++;
-        continue;
-      }
-
-      const bullet = line.match(/^\s*-\s+(.+)$/);
-      if (bullet) {
-        flushParagraph();
-        list.push(bullet[1]);
-        index++;
-        continue;
-      }
-
-      if (!line.trim()) {
-        flushParagraph();
-        flushList();
-      } else {
-        flushList();
-        paragraph.push(line.trim());
-      }
-      index++;
-    }
-
-    flushParagraph();
-    flushList();
-    return output.join('\n');
-  }
-
   function addCopyButtons() {
     document.querySelectorAll('#content pre').forEach(pre => {
+      if (pre.querySelector('.copy-btn')) return;
+
       const button = document.createElement('button');
       button.className = 'copy-btn';
       button.textContent = 'Copy';
@@ -253,21 +836,11 @@
     });
   }
 
-  fetch(sourceUrl)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.text();
-    })
-    .then(markdown => {
-      content.innerHTML = renderMarkdown(markdown);
-      addCopyButtons();
-      const highlighter = document.createElement('script');
-      highlighter.src = '/docs/_shared/code-highlight.js';
-      document.body.appendChild(highlighter);
-    })
-    .catch(error => {
-      content.innerHTML = `<p class="error">Could not load the guide: ${escapeHtml(error.message)}</p>`;
-    });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addCopyButtons);
+  } else {
+    addCopyButtons();
+  }
 })();
 </script>
 </body>
