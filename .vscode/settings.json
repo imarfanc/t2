@@ -1,0 +1,203 @@
+{
+  // ╭──────────────────────── Window & Commands ───────────────────────╮
+  // "window.zoomLevel": 1, // Scale entire UI (including explorer font)
+  "window.commandCenter": true,
+  "chat.commandCenter.enabled": false,
+
+  // ╭────────────────────────── Workbench ─────────────────────────────╮
+  // "workbench.editor.showTabs": "none",
+  // "workbench.sideBar.location": "right",
+  // "workbench.statusBar.visible": false,
+  // "workbench.activityBar.visible": false,
+  // "workbench.panel.defaultLocation": "top",
+  "workbench.activityBar.location": "top",
+  "workbench.secondarySideBar.showLabels": false,
+  "workbench.panel.showLabels": false,
+
+  // ╭─────────────────────────── Explorer ─────────────────────────────╮
+  "explorer.showHiddenFiles": true,
+  "explorer.confirmDelete": false,
+  "explorer.confirmPasteNative": false,
+  "explorer.confirmDragAndDrop": false,
+
+  // ╭──────────────────────── Icons & Themes ──────────────────────────╮
+  "workbench.iconTheme": "material-icon-theme",
+  "material-icon-theme.activeIconPack": "none",
+  "material-icon-theme.folders.associations": {
+    "websim": "App",
+    "MARKDOWN-FILES": "Ui"
+  },
+  "workbench.preferredDarkColorTheme": "Default High Contrast",
+  "workbench.preferredLightColorTheme": "Default High Contrast",
+  // "workbench.colorTheme": "Default High Contrast",
+  // "workbench.colorTheme": "Red",
+  // "workbench.colorTheme": "Kimbie Dark",
+  "workbench.colorCustomizations": {},
+
+  // ╭──────────────────────── Editor Appearance ───────────────────────╮
+  "editor.fontSize": 11,
+  // "editor.fontSize": 14,
+  "editor.fontFamily": "Hack Nerd Font Mono",
+  "editor.accessibilitySupport": "off",
+
+  // ╭────────────────────────── Formatting ────────────────────────────╮
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.configPath": ".prettierrc.json",
+  "prettier.enableDebugLogs": true,
+  "prettier.resolveGlobalModules": false,
+  "prettier.requireConfig": true,
+  "prettier.bracketSameLine": true,
+
+  // ╭───────────────────────── Files & Diffs ──────────────────────────╮
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    ".yoyo": true
+  },
+  "diffEditor.ignoreTrimWhitespace": false,
+  "diffEditor.hideUnchangedRegions.enabled": true,
+
+  // ╭───────────────────── Terminal Configuration ─────────────────────╮
+  // "terminal.integrated.lineHeight": 1.5,
+  "terminal.integrated.lineHeight": 1,
+  "terminal.integrated.fontSize": 14,
+  // "terminal.integrated.fontSize": 16,
+  "terminal.integrated.fontFamily": "Hack Nerd Font Mono",
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.tabs.location": "left",
+  "terminal.integrated.tabs.hideCondition": "never",
+
+  // ╭──────────────────────── Language Tools ──────────────────────────╮
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.format": true,
+  "python.defaultInterpreterPath": "/Users/arfan/miniconda3/bin/python",
+  "go.toolsManagement.autoUpdate": true,
+  "svelte.enable-ts-plugin": true,
+  "cursor.cpp.enablePartialAccepts": true,
+  "cursor.cpp.disabledLanguages": ["plaintext"],
+
+  // ╭────────────────────── Language Formatting ───────────────────────╮
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "denoland.vscode-deno",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file"
+  },
+
+  // ╭──────────────────── Markdown Configuration ─────────────────────╮
+  "[markdown]": {
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.wordWrap": "on",
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+  "markdown-preview-enhanced.previewTheme": "one-dark.css",
+  "markdownlint.config": {
+    "MD033": {
+      "allowed_elements": [
+        "a",
+        "img",
+        "strong",
+        "table",
+        "tr",
+        "th",
+        "td",
+        "style",
+        "em",
+        "p",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6"
+      ]
+    }
+  },
+  "markdownlint.focusMode": false,
+
+  // ╭────────────────────── Git Configuration ────────────────────────╮
+  "git.enableSmartCommit": false,
+  "git.autofetch": true,
+
+  // ╭──────────────────── Extensions & Services ──────────────────────╮
+  "liveServer.settings.donotShowInfoMsg": true,
+  "roo-cline.allowedCommands": ["npm test", "npm install", "tsc", "git log", "git diff", "git show"],
+  "roo-cline.deniedCommands": [],
+  "update.releaseTrack": "prerelease",
+
+  // ╭────────────────────── Remote Development ───────────────────────╮
+  "remote.SSH.remotePlatform": {
+    "sandbox.fzrjrx.csb": "linux"
+  },
+  // "security.promptForRemoteFileProtocolHandling": false,
+  // "cursor.composer.shouldChimeAfterChatFinishes": true,
+
+  // ╭──────────────────────── MCP Servers ─────────────────────────────╮
+  "mcp": {
+    "mcpServers": {
+      "playwriter": {
+        "command": "npx",
+        "args": ["-y", "playwriter@latest"]
+      }
+    }
+  }
+}

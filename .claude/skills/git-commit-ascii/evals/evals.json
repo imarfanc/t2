@@ -1,0 +1,104 @@
+{
+  "skill_name": "git-commit-ascii",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just finished fixing the login bug. Can you commit these changes?",
+      "expected_output": "Should check git status, show staged changes, and create a commit with Conventional Commits format starting with fix:",
+      "files": [],
+      "assertions": [
+        {
+          "id": "checked_staged",
+          "text": "Agent ran git status to check for staged files",
+          "type": "boolean"
+        },
+        {
+          "id": "did_not_autostage",
+          "text": "Agent did NOT auto-stage files (respected the 'only commit staged' rule)",
+          "type": "boolean"
+        },
+        {
+          "id": "no_staged_handling",
+          "text": "When no files were staged, agent informed user and asked them to stage files first",
+          "type": "boolean"
+        },
+        {
+          "id": "conventional_commits_format",
+          "text": "If commit was attempted, message followed Conventional Commits format (emoji type: description or emoji type(scope): description)",
+          "type": "boolean"
+        },
+        {
+          "id": "emoji_prefix",
+          "text": "If commit was attempted, message started with an emoji matching the type (e.g. 🐛 for fix, ✨ for feat)",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "commit these changes",
+      "expected_output": "Should show git status, display git diff --staged, and commit with appropriate message format",
+      "files": [],
+      "assertions": [
+        {
+          "id": "checked_staged",
+          "text": "Agent ran git status to check for staged files",
+          "type": "boolean"
+        },
+        {
+          "id": "did_not_autostage",
+          "text": "Agent did NOT auto-stage files (respected the 'only commit staged' rule)",
+          "type": "boolean"
+        },
+        {
+          "id": "showed_diff",
+          "text": "Agent ran git diff --staged to show what would be committed",
+          "type": "boolean"
+        },
+        {
+          "id": "conventional_commits_format",
+          "text": "If commit was attempted, message followed Conventional Commits format with emoji prefix",
+          "type": "boolean"
+        },
+        {
+          "id": "emoji_prefix",
+          "text": "If commit was attempted, message started with an emoji matching the type",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I added the new user profile feature, commit it",
+      "expected_output": "Should review staged changes and create a commit with feat: type and appropriate scope",
+      "files": [],
+      "assertions": [
+        {
+          "id": "checked_staged",
+          "text": "Agent ran git status to check for staged files",
+          "type": "boolean"
+        },
+        {
+          "id": "did_not_autostage",
+          "text": "Agent did NOT auto-stage files (respected the 'only commit staged' rule)",
+          "type": "boolean"
+        },
+        {
+          "id": "feat_type",
+          "text": "Agent recognized this as a 'feat' type commit (new feature)",
+          "type": "boolean"
+        },
+        {
+          "id": "conventional_commits_format",
+          "text": "If commit was attempted, message followed Conventional Commits format (✨ feat: or ✨ feat(scope):)",
+          "type": "boolean"
+        },
+        {
+          "id": "emoji_prefix",
+          "text": "If commit was attempted, message started with ✨ emoji for feat type",
+          "type": "boolean"
+        }
+      ]
+    }
+  ]
+}

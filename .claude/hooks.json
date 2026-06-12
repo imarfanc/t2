@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "hooks": {
+      "taskComplete": {
+        "notification": {
+          "title": "Cursor Agent",
+          "message": "Task completed successfully!",
+          "sound": "Glass"
+        }
+      }
+    }
+}

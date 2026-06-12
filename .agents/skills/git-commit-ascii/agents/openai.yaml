@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit ASCII"
+  short_description: "Commit staged changes with rich emoji messages"
+  default_prompt: "Use $git-commit-ascii to review and commit my staged changes locally."

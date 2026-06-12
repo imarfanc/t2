@@ -1,0 +1,20 @@
+# Project-level Codex defaults.
+# Codex loads this file only when the repository is trusted.
+
+# Ask before commands need permissions beyond the active sandbox.
+approval_policy = "on-request"
+
+# Permit repository edits while protecting files outside the workspace.
+sandbox_mode = "workspace-write"
+
+# Use OpenAI's cached search index unless live search is requested explicitly.
+web_search = "cached"
+
+# Favor thorough analysis for supported reasoning models.
+model_reasoning_effort = "high"
+
+# Keep responses direct and engineering-focused.
+personality = "pragmatic"
+
+# Open file citations in Visual Studio Code.
+file_opener = "vscode"
