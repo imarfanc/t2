@@ -1,0 +1,10 @@
+pre code .hl-cmt { color: light-dark(#6a737d, #8b949e); font-style: italic; }
+pre code .hl-kw { color: light-dark(#d73a49, #ff7b72); }
+pre code .hl-builtin { color: light-dark(#6f42c1, #d2a8ff); }
+pre code .hl-str { color: light-dark(#032f62, #a5d6ff); }
+pre code .hl-var { color: light-dark(#e36209, #ffa657); }
+pre code .hl-op { color: light-dark(#005cc5, #79c0ff); }
+pre code .hl-fn { color: light-dark(#6f42c1, #d2a8ff); }
+pre code .hl-num { color: light-dark(#005cc5, #79c0ff); }
+pre code .hl-type { color: light-dark(#e36209, #ffa657); }
+pre code .hl-flag { color: light-dark(#22863a, #7ee787); }
