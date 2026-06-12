@@ -106,6 +106,15 @@
         "commands": [
           "just serve"
         ]
+      },
+      {
+        "name": "just",
+        "autoExecuteCommands": false,
+        "icon": "symbol-color",
+        "color": "terminal.ansiCyan",
+        "commands": [
+          "just "
+        ]
       }
     ]
   }

@@ -1,6 +1,6 @@
 :root {
-  --bg: #0f1117; --card: #1a1d27; --border: #2a2e3c;
-  --text: #e6e8ef; --muted: #8b90a1; --accent: #7aa2f7; --green: #9ece6a;
+  --bg: #0f1117; --card: #1a1d27; --border: #2a2e3c; --text: #e6e8ef;
+  --muted: #8b90a1; --accent: #7aa2f7; --green: #9ece6a;
 }
 
 * { box-sizing: border-box; margin: 0; }
@@ -28,31 +28,12 @@ tr + tr td { border-top: 1px solid var(--border); }
 .note { color: var(--muted); font-size: .8rem; margin-top: 1rem; }
 code { background: #232634; padding: .1em .4em; border-radius: 4px; font-size: .85em; }
 #history td:last-child { min-width: 12rem; }
-.history-toggle {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-}
+.history-toggle { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; text-align: left; width: 100%; }
 .history-toggle .chev { color: var(--muted); font-size: .8em; }
 tr.history-head td { vertical-align: top; }
 tr.history-head:has(+ tr.history-detail:not([hidden])) td { border-bottom: none; }
-tr.history-detail td {
-  padding-top: 0;
-  border-top: none;
-}
-.commit-body {
-  margin: 0 0 .25rem;
-  padding: .6rem .8rem;
-  max-width: 100%;
-  background: #141722;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
+tr.history-detail td { padding-top: 0; border-top: none; }
+.commit-body { margin: 0 0 .25rem; padding: .6rem .8rem; max-width: 100%; background: #141722; border: 1px solid var(--border); border-radius: 6px; }
 .commit-body-compact,
 .commit-body-pre {
   margin: 0;
@@ -72,23 +53,9 @@ tr.history-detail td {
 .commit-body-text + .commit-body-table-wrap,
 .commit-body-table-wrap + .commit-body-text { margin-top: .65rem; }
 .commit-body-table-wrap { overflow-x: auto; max-width: 100%; }
-.commit-body-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .78rem;
-  line-height: 1.4;
-}
+.commit-body-table { width: 100%; border-collapse: collapse; font-size: .78rem; line-height: 1.4; }
 .commit-body-table th,
-.commit-body-table td {
-  border: 1px solid var(--border);
-  padding: .35rem .55rem;
-  text-align: left;
-  vertical-align: top;
-}
-.commit-body-table th {
-  background: rgba(255, 255, 255, 0.04);
-  font-weight: 600;
-  color: var(--text);
-}
+.commit-body-table td { border: 1px solid var(--border); padding: .35rem .55rem; text-align: left; vertical-align: top; }
+.commit-body-table th { background: rgba(255, 255, 255, 0.04); font-weight: 600; color: var(--text); }
 .commit-body-table td { color: var(--muted); }
 #error { color: #f7768e; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; display: none; }

@@ -38,3 +38,36 @@ serve:
 # Build and open the single-file Rust Markdown TUI.
 test-tui:
     scripts/test-tui/test.rs
+
+# --- CSS ---
+
+# Format CSS in compact style (short rules on one line).
+format-css *paths:
+    uv run scripts/format-css.py -i {{paths}}
+    uv run scripts/format-css.py --check {{paths}}
+
+# Check CSS formatting without writing files.
+format-css-check *paths:
+    uv run scripts/format-css.py --check {{paths}}
+
+# --- HTML ---
+
+# Format HTML in compact style (short elements on one line).
+format-html *paths:
+    uv run scripts/format-html.py -i {{paths}}
+    uv run scripts/format-html.py --check {{paths}}
+
+# Check HTML formatting without writing files.
+format-html-check *paths:
+    uv run scripts/format-html.py --check {{paths}}
+
+# --- Markdown ---
+
+# Format Markdown with mdformat (GFM tables, frontmatter).
+format-md *paths:
+    uv run scripts/format-md.py -i {{paths}}
+    uv run scripts/format-md.py --check {{paths}}
+
+# Check Markdown formatting without writing files.
+format-md-check *paths:
+    uv run scripts/format-md.py --check {{paths}}
