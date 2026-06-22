@@ -4,6 +4,7 @@
 
 mod debug;
 mod repo_info;
+mod run;
 
 use colored::Colorize;
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
@@ -302,6 +303,8 @@ fn handle(
 
         // Read remaining headers; honour the client's Connection preference.
         let mut client_close = false;
+        let mut content_length = 0_usize;
+        let mut origin: Option<String> = None;
         loop {
             line.clear();
             match reader.read_line(&mut line) {
@@ -323,8 +326,52 @@ fn handle(
                     if lower.starts_with("connection:") && lower.contains("close") {
                         client_close = true;
                     }
+                    if let Some(v) = lower.strip_prefix("content-length:") {
+                        content_length = v.trim().parse().unwrap_or(0);
+                    }
+                    // Preserve original case of the value for Origin matching.
+                    if lower.starts_with("origin:") {
+                        origin = line
+                            .splitn(2, ':')
+                            .nth(1)
+                            .map(|v| v.trim().to_string())
+                            .filter(|v| !v.is_empty());
+                    }
                 }
             }
+        }
+
+        // Read the request body if present (needed for POST /api/run).
+        let mut body_buf = vec![0_u8; content_length.min(64 * 1024)];
+        if !body_buf.is_empty() {
+            use std::io::Read;
+            if let Err(error) = reader.read_exact(&mut body_buf) {
+                diagnostics.log(connection_id, request_id, &format!("body read failed: {error}"));
+                return;
+            }
+        }
+
+        // API: run a command (whitelisted id, or same-origin script) → JSON.
+        if method == "POST" && path == "/api/run" {
+            let start_api = start;
+            let allow_script = run::origin_ok(origin.as_deref());
+            let (status, json) = run::api_run(&body_buf, allow_script);
+            let keep_alive = !client_close;
+            let result = respond(
+                &mut stream,
+                &method,
+                status,
+                "application/json",
+                json.as_bytes(),
+                keep_alive,
+            );
+            if log_requests {
+                log(&method, &path, status, start_api.elapsed().as_micros());
+            }
+            if result.is_err() || !keep_alive {
+                return;
+            }
+            continue;
         }
 
         let rel = Path::new(path.trim_start_matches('/'));
@@ -409,7 +456,9 @@ fn respond(
 ) -> std::io::Result<()> {
     let reason = match status {
         200 => "OK",
+        400 => "Bad Request",
         403 => "Forbidden",
+        500 => "Internal Server Error",
         _ => "Not Found",
     };
     let conn = if keep_alive { "keep-alive" } else { "close" };

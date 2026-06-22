@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 — macOS Reset</title>
+<link rel="stylesheet" href="/docs/_shared/guide.css">
+<link rel="stylesheet" href="/docs/_shared/code-highlight.css">
+</head>
+<body>
+<p><a href="/docs/macOS-reset-26.6/">← Back to macOS Reset 26.6</a></p>
+<h1>1 · First boot</h1>
+<p class="intro">The first file in the macOS reset project — Safari, Terminal, desktop setup, and auto login.</p>
+<p class="run-note"><strong>Run</strong> buttons execute a block on this Mac through the local repo server (<code>just serve</code>). Verify-style commands run by a fixed id; other blocks run as a script, but only when the page is served from the server itself. Interactive steps (<code>sudo</code>, prompts) can't complete without a terminal.</p>
+
+<h2>safari</h2>
+<ul>
+  <li>open <code>safari</code></li>
+  <li><a href="https://arfan-vals-list.val.run"><em>arfan-vals-list.val.run</em></a></li>
+  <li>get iPhone/iPad</li>
+  <li>sign into google</li>
+</ul>
+
+<h2>terminal</h2>
+<ul>
+  <li>open <code>terminal</code></li>
+</ul>
+
+<h2>macOS desktop</h2>
+<ul>
+  <li>rm photos widget</li>
+  <li>change computer name — opens the <em>About</em> pane:</li>
+</ul>
+<pre data-run-id="open_about"><code class="language-sh">open "x-apple.systempreferences:com.apple.SystemProfiler.AboutExtension"</code></pre>
+<ul>
+  <li>activate clipboard history</li>
+</ul>
+
+<h2>quit open apps (except Terminal &amp; Finder)</h2>
+<pre><code class="language-sh">osascript -e '
+tell application "System Events"
+  set quitApps to name of every process whose background only is false
+end tell
+set skipList to {"Finder", "Terminal"}
+repeat with appName in quitApps
+  if appName is not in skipList then
+    try
+      tell application appName to quit
+    end try
+  end if
+end repeat
+'</code></pre>
+
+<h2>auto login</h2>
+<pre data-run-id="open_users"><code class="language-sh">open "x-apple.systempreferences:com.apple.preferences.users"</code></pre>
+
+<h3>check auto login</h3>
+<pre><code class="language-sh">sudo defaults read /Library/Preferences/com.apple.loginwindow autoLoginUser</code></pre>
+
+<pre><code class="language-sh">sudo /usr/bin/osascript -e 'tell application "System Events" to log out'</code></pre>
+
+<p style="margin-top:3rem"><a href="/docs/macOS-reset-26.6/2-delete/">Next: 2 · Delete &amp; download →</a></p>
+
+<script src="/docs/_shared/code-highlight.js"></script>
+<script src="/docs/_shared/guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Run Command Test</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.25rem;
+    line-height: 1.6;
+    color: CanvasText;
+    background: Canvas;
+  }
+  h1 { color: #ce422b; }
+  a { color: #ce422b; }
+  .cmd {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: .5rem 0;
+  }
+  .cmd code {
+    flex: 1;
+    background: color-mix(in srgb, CanvasText 8%, Canvas);
+    padding: .35rem .6rem;
+    border-radius: 6px;
+    font-size: .9rem;
+  }
+  button {
+    font: inherit;
+    padding: .3rem .9rem;
+    border-radius: 6px;
+    border: 1px solid #ce422b;
+    background: transparent;
+    color: #ce422b;
+    cursor: pointer;
+  }
+  button:hover { background: #ce422b; color: white; }
+  button:disabled { opacity: .5; cursor: wait; }
+  pre {
+    background: color-mix(in srgb, CanvasText 8%, Canvas);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    min-height: 4rem;
+    font-size: .85rem;
+  }
+  .meta { font-size: .8rem; opacity: .7; }
+</style>
+</head>
+<body>
+<p><a href="/docs/macOS-reset-26.6/">← Back to macOS Reset 26.6</a></p>
+<h1>Run Command Test</h1>
+<p>Each button sends <code>POST /api/run</code> to the repo server, which executes
+the command on this Mac (whitelisted commands only) and returns the output below.</p>
+
+<div id="commands"></div>
+
+<h2>Output</h2>
+<pre id="output">— nothing run yet —</pre>
+<p class="meta" id="meta"></p>
+
+<script>
+const COMMANDS = [
+  { id: "sw_vers", label: "sw_vers" },
+  { id: "uname",   label: "uname -a" },
+  { id: "whoami",  label: "whoami" },
+  { id: "date",    label: "date" },
+  { id: "uptime",  label: "uptime" },
+];
+
+const out = document.getElementById("output");
+const meta = document.getElementById("meta");
+const wrap = document.getElementById("commands");
+
+for (const c of COMMANDS) {
+  const row = document.createElement("div");
+  row.className = "cmd";
+  const code = document.createElement("code");
+  code.textContent = c.label;
+  const btn = document.createElement("button");
+  btn.textContent = "Run";
+  btn.onclick = () => run(c.id, btn);
+  row.append(code, btn);
+  wrap.append(row);
+}
+
+async function run(id, btn) {
+  btn.disabled = true;
+  out.textContent = "running…";
+  meta.textContent = "";
+  const t0 = performance.now();
+  try {
+    const res = await fetch("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      out.textContent = "Error: " + (data.error ?? res.status);
+    } else {
+      out.textContent = (data.stdout || "") + (data.stderr ? "\n[stderr]\n" + data.stderr : "");
+      meta.textContent = `$ ${data.command} · exit ${data.exit_code} · ${(performance.now() - t0).toFixed(0)} ms`;
+    }
+  } catch (e) {
+    out.textContent = "Request failed: " + e.message +
+      "\n(Is the repo server running the updated build? Restart `just serve`.)";
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

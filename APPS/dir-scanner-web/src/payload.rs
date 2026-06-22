@@ -50,6 +50,17 @@ pub struct ScanSummary {
 }
 
 #[derive(Serialize)]
+pub struct IgnoredRow {
+    pub index: usize,
+    pub kind: String,
+    pub name: String,
+    pub path: String,
+    pub size: String,
+    pub size_bytes: u64,
+    pub file_count: usize,
+}
+
+#[derive(Serialize)]
 pub struct ScanResponse {
     pub root_path: String,
     pub summary: ScanSummary,
@@ -57,6 +68,7 @@ pub struct ScanResponse {
     pub top_files: Vec<RankedPath>,
     pub top_dirs: Vec<RankedPath>,
     pub top_dirs_by_files: Vec<RankedDirCount>,
+    pub ignored: Vec<IgnoredRow>,
     pub tree_lines: Vec<String>,
     pub report_text: String,
 }
@@ -159,6 +171,25 @@ impl ScanResponse {
             })
             .collect();
 
+        let ignored = data
+            .ignored_entries
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| IgnoredRow {
+                index: index + 1,
+                kind: (if entry.is_dir { "dir" } else { "file" }).to_string(),
+                name: if entry.is_dir {
+                    format!("{}/", entry.name)
+                } else {
+                    entry.name.clone()
+                },
+                path: scan::relative_path(&data.root_path, &entry.path),
+                size: scan::human_size(entry.size),
+                size_bytes: entry.size,
+                file_count: entry.file_count,
+            })
+            .collect();
+
         let summary = ScanSummary {
             depth: depth_label,
             dir_count: data.dir_count,
@@ -179,6 +210,7 @@ impl ScanResponse {
             top_files,
             top_dirs,
             top_dirs_by_files,
+            ignored,
             tree_lines: data.tree_lines.clone(),
         }
     }

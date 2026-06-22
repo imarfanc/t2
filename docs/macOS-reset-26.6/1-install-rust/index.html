@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Installing Rust on a New Mac</title>
+<link rel="stylesheet" href="/docs/_shared/guide.css">
+<link rel="stylesheet" href="/docs/_shared/code-highlight.css">
+</head>
+<body>
+<p><a href="/docs/macOS-reset-26.6/">← Back to macOS Reset 26.6</a></p>
+<h1>🦀 Installing Rust on a New Mac</h1>
+<p class="intro">Xcode Command Line Tools, then rustup. The repo's own file server is written in Rust, so this is the one tool you need before <code>just serve</code> works.</p>
+
+<h2>1. Install Xcode Command Line Tools</h2>
+<p>Rust needs Apple's linker and C toolchain:</p>
+<pre><code class="language-bash">xcode-select --install</code></pre>
+<p>Silent alternative via <code>softwareupdate</code> (no GUI dialog). Paste the whole heredoc so comments are handled safely in zsh:</p>
+<details><summary>Show the silent CLT installer</summary>
+<pre><code class="language-bash">zsh &lt;&lt;'ZSH'
+set -e
+
+# Skip if already installed
+if xcode-select -p &gt;/dev/null 2&gt;&amp;1; then
+  echo "✓ CLT already installed: $(xcode-select -p)"
+  exit 0
+fi
+
+# Trick the system into listing the CLT package
+TRIGGER=/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+touch "$TRIGGER"
+trap 'rm -f "$TRIGGER"' EXIT
+
+# Find the newest CLT label
+CLT=$(softwareupdate -l 2&gt;/dev/null \
+  | grep -o 'Label: Command Line Tools for Xcode.*' \
+  | sed 's/^Label: //' \
+  | sort -V | tail -1)
+
+if [ -z "$CLT" ]; then
+  echo "✗ No CLT package found in softwareupdate catalog." &gt;&amp;2
+  echo "  Fallback: run  xcode-select --install" &gt;&amp;2
+  exit 1
+fi
+
+echo "Installing: $CLT"
+
+# Install silently (needs sudo, no GUI)
+sudo softwareupdate -i "$CLT" --verbose
+
+# Verify
+xcode-select -p &gt;/dev/null 2&gt;&amp;1 \
+  &amp;&amp; echo "✓ Installed: $(xcode-select -p)" \
+  || { echo "✗ Install failed." &gt;&amp;2; exit 1; }
+ZSH</code></pre>
+</details>
+
+<h2>2. Install Rust with rustup</h2>
+<p><a href="https://rustup.rs">rustup</a> is the official installer and toolchain manager:</p>
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></pre>
+<p>Press <strong>Enter</strong> to accept the default. This installs <code>rustc</code>, <code>cargo</code>, and <code>rustup</code>.</p>
+
+<h2>3. Load Rust into your shell</h2>
+<pre><code class="language-bash">source "$HOME/.cargo/env"</code></pre>
+
+<h2>4. Verify</h2>
+<pre data-run-id="rustc_version"><code class="language-bash">rustc --version</code></pre>
+<pre data-run-id="cargo_version"><code class="language-bash">cargo --version</code></pre>
+
+<h2>5. Keep it updated</h2>
+<pre><code class="language-bash">rustup update</code></pre>
+
+<div class="tip">
+<p><strong>Tip:</strong> This repo includes a Rust file server in <code>server/</code>. Run it with <code>just serve</code> — it serves the repo at <a href="/">http://localhost:8008</a> and powers the Run buttons throughout this guide.</p>
+</div>
+
+<p style="margin-top:3rem"><a href="/docs/macOS-reset-26.6/">Back to the guide index →</a></p>
+
+<script src="/docs/_shared/code-highlight.js"></script>
+<script src="/docs/_shared/guide.js"></script>
+</body>
+</html>

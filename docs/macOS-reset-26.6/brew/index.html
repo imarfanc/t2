@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install Homebrew</title>
+<link rel="stylesheet" href="/docs/_shared/guide.css">
+<link rel="stylesheet" href="/docs/_shared/code-highlight.css">
+</head>
+<body>
+<p><a href="/docs/macOS-reset-26.6/">← Back to macOS Reset 26.6</a></p>
+<h1>🍺 Install Homebrew</h1>
+<p class="intro">The package manager the rest of this guide leans on. Site: <a href="https://brew.sh">brew.sh</a>.</p>
+
+<h2>1. Run the installer</h2>
+<p>Paste this into Terminal. It's interactive (asks for your password and an Enter), so it stays copy-only.</p>
+<pre><code class="language-sh">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+afplay /System/Library/Sounds/Funk.aiff</code></pre>
+
+<h2>2. Add brew to your shell</h2>
+<pre><code class="language-sh">echo &gt;&gt; "$HOME/.zprofile"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv zsh)"' &gt;&gt; "$HOME/.zprofile"
+eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+source ~/.zshrc
+cat "$HOME/.zprofile"
+cat "$HOME/.zshrc"</code></pre>
+
+<h2>3. Verify</h2>
+<p>Once the server has brew on its PATH, this prints the installed version:</p>
+<pre data-run-id="brew_version"><code class="language-sh">brew --version</code></pre>
+
+<p style="margin-top:3rem"><a href="/docs/macOS-reset-26.6/go/">Next: Install Go →</a></p>
+
+<script src="/docs/_shared/code-highlight.js"></script>
+<script src="/docs/_shared/guide.js"></script>
+</body>
+</html>

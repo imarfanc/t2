@@ -73,6 +73,15 @@ pub struct FileSize {
     pub size: u64,
 }
 
+#[derive(Clone)]
+pub struct IgnoredEntry {
+    pub path: PathBuf,
+    pub name: String,
+    pub is_dir: bool,
+    pub size: u64,
+    pub file_count: usize,
+}
+
 pub struct ScanData {
     pub root_path: PathBuf,
     pub root_total_size: u64,
@@ -85,6 +94,7 @@ pub struct ScanData {
     pub largest_files: Vec<FileSize>,
     pub dir_sizes: HashMap<PathBuf, u64>,
     pub dir_file_counts: HashMap<PathBuf, usize>,
+    pub ignored_entries: Vec<IgnoredEntry>,
 }
 
 pub fn scan_tree(root_path: &Path, options: &ScanOptions) -> ScanData {
@@ -114,12 +124,14 @@ pub fn scan_tree(root_path: &Path, options: &ScanOptions) -> ScanData {
         largest_files: Vec::new(),
         dir_sizes,
         dir_file_counts,
+        ignored_entries: Vec::new(),
     };
 
     let mut tree_visited = HashSet::new();
     let tree_lines = build_tree_lines(root_path, options, 0, "", &mut tree_visited, &mut data);
     data.tree_lines = tree_lines;
     data.largest_files.sort_by(|a, b| b.size.cmp(&a.size));
+    data.ignored_entries.sort_by(|a, b| b.size.cmp(&a.size));
     data
 }
 
@@ -166,7 +178,7 @@ fn build_tree_lines(
     }
 
     data.max_depth_reached = data.max_depth_reached.max(depth);
-    let entries = list_dir(dir, options);
+    let entries = list_dir_collect(dir, options, Some(&mut data.ignored_entries));
     let mut lines = Vec::new();
 
     for (index, entry) in entries.iter().enumerate() {
@@ -220,6 +232,37 @@ fn should_skip(name: &str, is_dir: bool, options: &ScanOptions) -> bool {
 }
 
 fn list_dir(dir: &Path, options: &ScanOptions) -> Vec<EntryInfo> {
+    list_dir_collect(dir, options, None)
+}
+
+/// Recursive size + file count of a directory with no ignore filtering.
+fn measure_unfiltered(dir: &Path) -> (u64, usize) {
+    let mut total = 0;
+    let mut files = 0;
+    let Ok(children) = fs::read_dir(dir) else {
+        return (0, 0);
+    };
+    for child in children.flatten() {
+        let Ok(metadata) = fs::symlink_metadata(child.path()) else {
+            continue;
+        };
+        if metadata.is_dir() {
+            let (sub_size, sub_files) = measure_unfiltered(&child.path());
+            total += sub_size;
+            files += sub_files;
+        } else if metadata.is_file() {
+            total += metadata.len();
+            files += 1;
+        }
+    }
+    (total, files)
+}
+
+fn list_dir_collect(
+    dir: &Path,
+    options: &ScanOptions,
+    mut ignored: Option<&mut Vec<IgnoredEntry>>,
+) -> Vec<EntryInfo> {
     let mut entries = Vec::new();
     let Ok(children) = fs::read_dir(dir) else {
         return entries;
@@ -243,6 +286,20 @@ fn list_dir(dir: &Path, options: &ScanOptions) -> Vec<EntryInfo> {
         let is_dir = metadata.is_dir();
 
         if should_skip(&name, is_dir, options) {
+            if let Some(collector) = ignored.as_mut() {
+                let (size, file_count) = if is_dir {
+                    measure_unfiltered(&path)
+                } else {
+                    (metadata.len(), 1)
+                };
+                collector.push(IgnoredEntry {
+                    path,
+                    name,
+                    is_dir,
+                    size,
+                    file_count,
+                });
+            }
             continue;
         }
 

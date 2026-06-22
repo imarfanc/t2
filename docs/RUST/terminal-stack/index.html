@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rust Terminal Stack (optional)</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 5rem;
+    line-height: 1.6;
+    color: CanvasText;
+    background: Canvas;
+  }
+  h1 { border-bottom: 2px solid #ce422b; padding-bottom: .4rem; }
+  h2 { margin-top: 2.5rem; color: #ce422b; }
+  a { color: #ce422b; }
+  code {
+    background: light-dark(#f4f4f4, #2a2a2a);
+    padding: .15em .4em;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .9em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  th, td {
+    padding: .65rem .75rem;
+    border: 1px solid light-dark(#d8d8d8, #484848);
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: light-dark(#f3f3f3, #292929); }
+</style>
+</head>
+<body>
+<p><a href="/docs/RUST/">← Back to Rust</a></p>
+<h1>🦀 Rust terminal stack (optional)</h1>
+<p>Rust alternatives to the Charm Go stack:</p>
+<table><thead><tr><th>Crate</th><th>What it is</th><th>When you use it</th></tr></thead><tbody><tr><td><strong><a href="https://github.com/console-rs/console">console</a></strong></td><td>Terminal colors and styling</td><td>Styled headings and status messages</td></tr><tr><td><strong><a href="https://github.com/console-rs/indicatif">indicatif</a></strong></td><td>Progress bars and spinners</td><td>Long-running scans and downloads</td></tr><tr><td><strong><a href="https://github.com/Nukesor/comfy-table">comfy-table</a></strong></td><td>Styled terminal tables</td><td>Summaries, file lists, and system information</td></tr><tr><td><strong><a href="https://github.com/ratatui/ratatui">ratatui</a></strong></td><td>Full terminal UI framework</td><td>Interactive dashboards, menus, and applications</td></tr><tr><td><strong><a href="https://github.com/crossterm-rs/crossterm">crossterm</a></strong></td><td>Cross-platform terminal control</td><td>Keyboard events, raw mode, cursor control, and screen updates</td></tr></tbody></table>
+<p><strong>Used in this repo:</strong> <a href="/Archive/dir-scanner-tui/">dir-scanner-tui</a> uses <strong>ratatui</strong> and <strong>crossterm</strong>. <a href="/APPS/dir-scanner-web/">dir-scanner-web</a> uses <strong>colored</strong> and <strong>crossterm</strong> for server terminal output.</p>
+</body>
+</html>

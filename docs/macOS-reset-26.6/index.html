@@ -4,29 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>macOS Reset 26.6</title>
+<link rel="stylesheet" href="/docs/_shared/guide.css">
 <style>
-  :root { color-scheme: light dark; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 3rem 1.25rem;
-    line-height: 1.6;
-    color: CanvasText;
-    background: Canvas;
+  ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+  ol.steps > li {
+    counter-increment: step;
+    position: relative;
+    margin: .6rem 0;
+    padding: .85rem 1rem .85rem 3.2rem;
+    border: 1px solid light-dark(#e2e2e2, #3a3a3a);
+    border-radius: 10px;
+    background: light-dark(#fafafa, #1f1f1f);
   }
-  h1 { color: #ce422b; }
-  a { color: #ce422b; }
-  li { margin: .4rem 0; }
+  ol.steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: .8rem; top: 50%;
+    transform: translateY(-50%);
+    width: 1.7rem; height: 1.7rem;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: #ce422b; color: #fff;
+    font-size: .85rem; font-weight: 700;
+  }
+  ol.steps > li.alt::before { background: #4a9c5e; content: "↳"; font-size: 1rem; }
+  ol.steps a { font-weight: 600; text-decoration: none; }
+  ol.steps .sub { display: block; font-size: .85rem; opacity: .75; font-weight: 400; }
 </style>
 </head>
 <body>
 <p><a href="/">← Back to the repo index</a></p>
 <h1>macOS Reset 26.6</h1>
-<p>Guides for resetting and reinstalling development tools after a macOS reset.</p>
-<ul>
-  <li><a href="/docs/macOS-reset-26.6/1.1-one/">1 — Safari, Terminal, desktop setup, auto login</a></li>
-  <li><a href="/docs/macOS-reset-26.6/rust-install/">Rust install guide and directory scanner</a></li>
-</ul>
+<p class="intro">A run-as-you-go guide for rebuilding a Mac after a reset. Start the local server with <code>just serve</code>, then green <strong>Run</strong> buttons execute safe commands (and verify installs) right from the page.</p>
+
+<ol class="steps">
+  <li><a href="/docs/macOS-reset-26.6/2-second/">First boot</a>
+    <span class="sub">Safari, Terminal, desktop setup, auto login</span></li>
+  <li><a href="/docs/macOS-reset-26.6/2-delete/">Delete &amp; download</a>
+    <span class="sub">Clear home folders, recreate dirs, pull the warp-251224 repo</span></li>
+  <li><a href="/docs/macOS-reset-26.6/1-install-rust/">Install Rust</a>
+    <span class="sub">Xcode CLT + rustup — needed to build the repo server</span></li>
+  <li><a href="/docs/macOS-reset-26.6/brew/">Install Homebrew</a>
+    <span class="sub">The package manager for everything below</span></li>
+  <li><a href="/docs/macOS-reset-26.6/go/">Install Go</a>
+    <span class="sub">brew or official tarball, plus a Charm backup scanner</span></li>
+  <li class="alt"><a href="/docs/macOS-reset-26.6/uv/">Install uv</a>
+    <span class="sub">Fast Python manager + Rich backup scanner</span></li>
+  <li class="alt"><a href="/docs/macOS-reset-26.6/deno/">Install Deno</a>
+    <span class="sub">TypeScript runtime + Deno backup scanner, opencode setup</span></li>
+</ol>
+
+<div class="tip">
+<p><strong>Run buttons need the server.</strong> Build it once (see <a href="/docs/macOS-reset-26.6/1-install-rust/">Install Rust</a>), then <code>just serve</code> hosts the repo at <a href="/">localhost:8008</a>. Every block has a Run button; scripts only run when the page is served from the server itself, and interactive steps (<code>sudo</code>, prompts) can't complete without a terminal.</p>
+</div>
+
+<p><a href="/docs/macOS-reset-26.6/run-test/">Run Command Test →</a> — sandbox for the Run mechanism.</p>
+
+<script src="/docs/_shared/guide.js"></script>
 </body>
 </html>

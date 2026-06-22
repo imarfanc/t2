@@ -228,6 +228,7 @@ pub fn system_rows() -> Vec<(&'static str, String)> {
     vec![
         ("User", run("whoami", &[])),
         ("Hostname", run("hostname", &[])),
+        ("Local IP", local_ip().unwrap_or_else(|| "—".into())),
         ("OS", run("sw_vers", &["-productName"])),
         ("OS Version", run("sw_vers", &["-productVersion"])),
         ("Build", run("sw_vers", &["-buildVersion"])),
@@ -256,6 +257,13 @@ pub fn system_rows() -> Vec<(&'static str, String)> {
         ("Rust", run("rustc", &["--version"])),
         ("Cargo", run("cargo", &["--version"])),
     ]
+}
+
+/// Local (LAN) IP discovered via a connected UDP socket — no packets are sent.
+fn local_ip() -> Option<String> {
+    let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
+    socket.connect("8.8.8.8:80").ok()?;
+    Some(socket.local_addr().ok()?.ip().to_string())
 }
 
 fn format_timestamp_suffix(time: DateTime<Local>) -> String {

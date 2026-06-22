@@ -1,0 +1,142 @@
+/* Shared styles for macOS Reset guide pages.
+   Pair with guide.js (copy + run buttons) and code-highlight.css. */
+
+:root { color-scheme: light dark; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 5rem;
+  line-height: 1.6;
+  color: CanvasText;
+  background: Canvas;
+}
+
+h1 { border-bottom: 2px solid #ce422b; padding-bottom: .4rem; }
+h2 { margin-top: 2.5rem; color: #ce422b; }
+h3 { margin-top: 1.75rem; }
+a { color: #ce422b; }
+
+code {
+  background: light-dark(#f4f4f4, #2a2a2a);
+  padding: .15em .4em;
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .9em;
+}
+code.copyable {
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color .1s ease, background .1s ease;
+}
+code.copyable:hover { border-color: light-dark(#ccc, #555); }
+code.copyable.copied {
+  border-color: #4a9c5e;
+  background: light-dark(#f0fdf4, #1f2a22);
+}
+
+pre {
+  position: relative;
+  max-height: 68vh;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid light-dark(#ddd, #444);
+  border-radius: 8px;
+  background: light-dark(#f0f0f0, #252525);
+}
+pre code { display: block; min-width: max-content; padding: 0; background: none; }
+
+ul { margin: .5rem 0 1rem; }
+li { margin: .35rem 0; }
+
+.intro {
+  border-left: 4px solid #ce422b;
+  padding: .65rem 1rem;
+  border-radius: 0 8px 8px 0;
+  background: light-dark(rgba(206,66,43,.08), rgba(206,66,43,.18));
+}
+.run-note {
+  font-size: .85rem;
+  border-left: 4px solid #4a9c5e;
+  padding: .55rem 1rem;
+  border-radius: 0 8px 8px 0;
+  background: light-dark(rgba(74,156,94,.08), rgba(74,156,94,.16));
+}
+.tip {
+  border-left: 4px solid #ce422b;
+  padding: .5rem 1rem;
+  background: light-dark(rgba(206,66,43,.08), rgba(206,66,43,.18));
+  border-radius: 0 8px 8px 0;
+}
+
+details {
+  margin: .5rem 0 1.5rem;
+  border: 1px solid light-dark(#ddd, #444);
+  border-radius: 8px;
+  padding: .5rem .85rem;
+  background: light-dark(#fafafa, #1f1f1f);
+}
+details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .9rem;
+}
+details[open] > summary { margin-bottom: .5rem; }
+details pre { margin: .5rem 0 0; }
+
+/* Run + Copy grouped together, sticky at the top-right of a pre */
+.pre-btns {
+  position: sticky;
+  z-index: 2;
+  top: 6px;
+  float: right;
+  display: flex;
+  gap: 6px;
+  margin: -4px -4px 4px 8px;
+}
+.pre-btns button {
+  padding: 4px 10px;
+  font: 11px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.copy-btn {
+  border: 1px solid light-dark(#ccc, #555);
+  background: light-dark(#fff, #2f2f2f);
+  color: light-dark(#444, #ccc);
+  opacity: .8;
+}
+.copy-btn:hover { opacity: 1; }
+.copy-btn.copied { border-color: #4a9c5e; color: #4a9c5e; opacity: 1; }
+
+.run-btn {
+  border: 1px solid #4a9c5e;
+  background: #4a9c5e;
+  color: #fff;
+  opacity: .9;
+}
+.run-btn:hover { opacity: 1; }
+.run-btn:disabled { opacity: .5; cursor: wait; }
+
+.run-output {
+  margin: -.5rem 0 1.5rem;
+  padding: .75rem 1rem;
+  border: 1px solid light-dark(#cfe6d6, #2b4233);
+  border-left: 4px solid #4a9c5e;
+  border-radius: 0 8px 8px 0;
+  background: light-dark(#f4fbf6, #1b241d);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .82rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.run-output .run-meta {
+  display: block;
+  margin-top: .5rem;
+  padding-top: .4rem;
+  border-top: 1px dashed light-dark(#cfe6d6, #2b4233);
+  font-size: .72rem;
+  opacity: .7;
+}
