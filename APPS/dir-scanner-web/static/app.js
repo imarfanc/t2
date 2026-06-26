@@ -23,6 +23,9 @@ let currentScan = null;
 let systemInfo = null;
 const sortState = {}; // tableId -> { key, dir }
 const filterState = {}; // tableId -> string
+let scanTimerId = null;
+let scanStartedAt = 0;
+let scanProgress = null;
 
 // ---------- helpers ----------
 
@@ -36,6 +39,51 @@ function setStatus(message, kind = "") {
   }
   statusEl.appendChild(document.createTextNode(message));
   statusEl.className = kind;
+}
+
+function formatElapsedSeconds(startedAt) {
+  return ((performance.now() - startedAt) / 1000).toFixed(1);
+}
+
+function formatScanProgressMessage(progress, startedAt) {
+  const secs = formatElapsedSeconds(startedAt);
+  if (!progress) return `Scanning… ${secs}s`;
+
+  if (progress.phase === "sizing" && progress.dir_count > 0) {
+    return `Sizing… ${progress.dir_count.toLocaleString()} directories — ${secs}s`;
+  }
+
+  const parts = [];
+  if (progress.file_count > 0) {
+    parts.push(`${progress.file_count.toLocaleString()} files`);
+  }
+  if (progress.dir_count > 0) {
+    parts.push(`${progress.dir_count.toLocaleString()} directories`);
+  }
+  if (progress.scanned_bytes > 0) {
+    parts.push(humanSize(progress.scanned_bytes));
+  }
+
+  if (parts.length) return `Scanning… ${parts.join(", ")} — ${secs}s`;
+  return `Scanning… ${secs}s`;
+}
+
+function startScanStatusTimer() {
+  stopScanStatusTimer();
+  scanStartedAt = performance.now();
+  scanProgress = null;
+  setStatus(formatScanProgressMessage(null, scanStartedAt), "busy");
+  scanTimerId = setInterval(() => {
+    setStatus(formatScanProgressMessage(scanProgress, scanStartedAt), "busy");
+  }, 200);
+}
+
+function stopScanStatusTimer() {
+  if (scanTimerId) {
+    clearInterval(scanTimerId);
+    scanTimerId = null;
+  }
+  scanProgress = null;
 }
 
 function humanSize(bytes) {
@@ -474,17 +522,55 @@ async function runScan() {
   scanBtn.disabled = true;
   saveBtn.disabled = true;
   persistSettings();
-  setStatus("Scanning…", "busy");
-  const started = performance.now();
+  startScanStatusTimer();
+
   try {
-    const response = await fetch(`/api/scan?${scanQueryParams()}`);
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || "Scan failed");
+    const payload = await new Promise((resolve, reject) => {
+      const source = new EventSource(`/api/scan/stream?${scanQueryParams()}`);
+      let settled = false;
+
+      const finish = (handler) => {
+        if (settled) return;
+        settled = true;
+        source.close();
+        handler();
+      };
+
+      source.onmessage = (event) => {
+        let message;
+        try {
+          message = JSON.parse(event.data);
+        } catch (error) {
+          finish(() => reject(new Error("Invalid scan progress")));
+          return;
+        }
+
+        if (message.type === "progress") {
+          scanProgress = message;
+          setStatus(formatScanProgressMessage(scanProgress, scanStartedAt), "busy");
+          return;
+        }
+
+        if (message.type === "done") {
+          finish(() => resolve(message.data));
+          return;
+        }
+
+        if (message.type === "error") {
+          finish(() => reject(new Error(message.error || "Scan failed")));
+        }
+      };
+
+      source.onerror = () => {
+        finish(() => reject(new Error("Scan failed")));
+      };
+    });
+
     currentScan = payload;
     Object.keys(sortState).forEach((k) => delete sortState[k]);
     renderAll(currentScan);
     saveBtn.disabled = false;
-    const secs = ((performance.now() - started) / 1000).toFixed(2);
+    const secs = formatElapsedSeconds(scanStartedAt);
     setStatus(
       `Scanned ${payload.summary.file_count.toLocaleString()} files in ${payload.summary.dir_count.toLocaleString()} directories — ${payload.summary.root_total_size_human} total, ${secs}s.`,
       "ok"
@@ -493,6 +579,7 @@ async function runScan() {
     currentScan = null;
     setStatus(error.message, "error");
   } finally {
+    stopScanStatusTimer();
     scanBtn.disabled = false;
   }
 }

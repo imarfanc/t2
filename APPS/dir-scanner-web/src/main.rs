@@ -3,6 +3,7 @@ mod report;
 mod scan;
 mod terminal;
 
+use std::convert::Infallible;
 use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -13,12 +14,19 @@ use axum::extract::State;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::middleware::{self, Next};
+use axum::response::sse::{Event, Sse};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use crate::payload::{system_info, KeyValue, ScanResponse};
-use crate::scan::{parse_ignore_list, real_root, scan_tree, ScanOptions, DEFAULT_SCAN_ROOT};
+use crate::scan::{
+    parse_ignore_list, real_root, scan_tree, scan_tree_with_progress, ScanOptions, ScanProgress,
+    DEFAULT_SCAN_ROOT,
+};
+use futures_util::stream::Stream;
 use serde::{Deserialize, Serialize};
+use tokio_stream::wrappers::UnboundedReceiverStream;
+use tokio_stream::StreamExt;
 use tower_http::services::ServeDir;
 
 #[derive(Debug, Deserialize)]
@@ -94,6 +102,7 @@ fn build_app(static_dir: PathBuf, log_requests: bool, cfg: terminal::Config) -> 
         .route("/api/system", get(api_system))
         .route("/api/browse", post(api_browse))
         .route("/api/scan", get(api_scan))
+        .route("/api/scan/stream", get(api_scan_stream))
         .route("/api/save", post(api_save))
         .fallback_service(ServeDir::new(static_dir))
         .with_state(cfg);
@@ -194,6 +203,66 @@ async fn api_scan(Query(query): Query<ScanQuery>) -> Result<Json<ScanResponse>, 
         .map(|path| scan_tree(&path, &options))
         .map_err(AppError::from)?;
     Ok(Json(ScanResponse::from_scan(&data)))
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum ScanStreamEvent {
+    Progress {
+        phase: &'static str,
+        file_count: usize,
+        dir_count: usize,
+        scanned_bytes: u64,
+    },
+    Done { data: ScanResponse },
+    Error { error: String },
+}
+
+impl From<ScanProgress> for ScanStreamEvent {
+    fn from(value: ScanProgress) -> Self {
+        Self::Progress {
+            phase: value.phase,
+            file_count: value.file_count,
+            dir_count: value.dir_count,
+            scanned_bytes: value.scanned_bytes,
+        }
+    }
+}
+
+async fn api_scan_stream(
+    Query(query): Query<ScanQuery>,
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    let options = scan_options_from_query(&query);
+    let root = query
+        .root
+        .unwrap_or_else(|| DEFAULT_SCAN_ROOT.into());
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<ScanStreamEvent>();
+
+    tokio::task::spawn_blocking(move || {
+        let send = |event: ScanStreamEvent| {
+            let _ = tx.send(event);
+        };
+
+        match real_root(PathBuf::from(root).as_path()) {
+            Ok(path) => {
+                let data = scan_tree_with_progress(&path, &options, |progress| {
+                    send(progress.into());
+                });
+                send(ScanStreamEvent::Done {
+                    data: ScanResponse::from_scan(&data),
+                });
+            }
+            Err(error) => send(ScanStreamEvent::Error {
+                error: error.to_string(),
+            }),
+        }
+    });
+
+    let stream = UnboundedReceiverStream::new(rx).map(|event| {
+        Ok(Event::default().json_data(event).expect("scan stream event"))
+    });
+
+    Sse::new(stream)
 }
 
 async fn api_save(Query(query): Query<ScanQuery>) -> Result<Json<SaveBody>, AppError> {

@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
 #[derive(Clone, Default)]
 pub struct ScanOptions {
@@ -82,6 +83,28 @@ pub struct IgnoredEntry {
     pub file_count: usize,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct ScanProgress {
+    pub phase: &'static str,
+    pub file_count: usize,
+    pub dir_count: usize,
+    pub scanned_bytes: u64,
+}
+
+const PROGRESS_INTERVAL: Duration = Duration::from_millis(200);
+
+fn throttled_progress(
+    last: &mut Instant,
+    on_progress: &mut impl FnMut(ScanProgress),
+    progress: ScanProgress,
+    force: bool,
+) {
+    if force || last.elapsed() >= PROGRESS_INTERVAL {
+        *last = Instant::now();
+        on_progress(progress);
+    }
+}
+
 pub struct ScanData {
     pub root_path: PathBuf,
     pub root_total_size: u64,
@@ -98,6 +121,16 @@ pub struct ScanData {
 }
 
 pub fn scan_tree(root_path: &Path, options: &ScanOptions) -> ScanData {
+    scan_tree_with_progress(root_path, options, |_| {})
+}
+
+pub fn scan_tree_with_progress(
+    root_path: &Path,
+    options: &ScanOptions,
+    mut on_progress: impl FnMut(ScanProgress),
+) -> ScanData {
+    let mut progress_at = Instant::now();
+    let mut dirs_sized = 0usize;
     let mut dir_sizes = HashMap::new();
     let mut dir_file_counts = HashMap::new();
     let mut size_visited = HashSet::new();
@@ -107,9 +140,23 @@ pub fn scan_tree(root_path: &Path, options: &ScanOptions) -> ScanData {
         &mut dir_sizes,
         &mut dir_file_counts,
         &mut size_visited,
+        &mut dirs_sized,
+        &mut progress_at,
+        &mut on_progress,
     )
     .map(|(size, _)| size)
     .unwrap_or(0);
+    throttled_progress(
+        &mut progress_at,
+        &mut on_progress,
+        ScanProgress {
+            phase: "tree",
+            file_count: 0,
+            dir_count: 0,
+            scanned_bytes: 0,
+        },
+        true,
+    );
     let root_entries = list_dir(root_path, options);
 
     let mut data = ScanData {
@@ -128,10 +175,30 @@ pub fn scan_tree(root_path: &Path, options: &ScanOptions) -> ScanData {
     };
 
     let mut tree_visited = HashSet::new();
-    let tree_lines = build_tree_lines(root_path, options, 0, "", &mut tree_visited, &mut data);
+    let tree_lines = build_tree_lines(
+        root_path,
+        options,
+        0,
+        "",
+        &mut tree_visited,
+        &mut data,
+        &mut progress_at,
+        &mut on_progress,
+    );
     data.tree_lines = tree_lines;
     data.largest_files.sort_by(|a, b| b.size.cmp(&a.size));
     data.ignored_entries.sort_by(|a, b| b.size.cmp(&a.size));
+    throttled_progress(
+        &mut progress_at,
+        &mut on_progress,
+        ScanProgress {
+            phase: "tree",
+            file_count: data.file_count,
+            dir_count: data.dir_count,
+            scanned_bytes: data.scanned_file_bytes,
+        },
+        true,
+    );
     data
 }
 
@@ -141,6 +208,9 @@ fn scan_dir_size(
     dir_sizes: &mut HashMap<PathBuf, u64>,
     dir_file_counts: &mut HashMap<PathBuf, usize>,
     visited: &mut HashSet<PathBuf>,
+    dirs_sized: &mut usize,
+    progress_at: &mut Instant,
+    on_progress: &mut impl FnMut(ScanProgress),
 ) -> io::Result<(u64, usize)> {
     let real = fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
     if !visited.insert(real) {
@@ -151,8 +221,16 @@ fn scan_dir_size(
     let mut file_count = 0;
     for entry in list_dir(dir, options) {
         if entry.is_dir {
-            let (sub_size, sub_files) =
-                scan_dir_size(&entry.path, options, dir_sizes, dir_file_counts, visited)?;
+            let (sub_size, sub_files) = scan_dir_size(
+                entry.path.as_path(),
+                options,
+                dir_sizes,
+                dir_file_counts,
+                visited,
+                dirs_sized,
+                progress_at,
+                on_progress,
+            )?;
             total += sub_size;
             file_count += sub_files;
         } else {
@@ -162,6 +240,18 @@ fn scan_dir_size(
     }
     dir_sizes.insert(dir.to_path_buf(), total);
     dir_file_counts.insert(dir.to_path_buf(), file_count);
+    *dirs_sized += 1;
+    throttled_progress(
+        progress_at,
+        on_progress,
+        ScanProgress {
+            phase: "sizing",
+            file_count: 0,
+            dir_count: *dirs_sized,
+            scanned_bytes: 0,
+        },
+        false,
+    );
     Ok((total, file_count))
 }
 
@@ -172,6 +262,8 @@ fn build_tree_lines(
     prefix: &str,
     visited: &mut HashSet<PathBuf>,
     data: &mut ScanData,
+    progress_at: &mut Instant,
+    on_progress: &mut impl FnMut(ScanProgress),
 ) -> Vec<String> {
     if depth >= HARD_DEPTH_LIMIT || (!SCAN_EVERYTHING && depth >= MAX_DEPTH) {
         return Vec::new();
@@ -192,6 +284,17 @@ fn build_tree_lines(
                 continue;
             }
             data.dir_count += 1;
+            throttled_progress(
+                progress_at,
+                on_progress,
+                ScanProgress {
+                    phase: "tree",
+                    file_count: data.file_count,
+                    dir_count: data.dir_count,
+                    scanned_bytes: data.scanned_file_bytes,
+                },
+                false,
+            );
             let size = *data.dir_sizes.get(&entry.path).unwrap_or(&0);
             lines.push(format!(
                 "{prefix}{connector}□ {}/  ◌ {}",
@@ -205,10 +308,23 @@ fn build_tree_lines(
                 &next_prefix,
                 visited,
                 data,
+                progress_at,
+                on_progress,
             ));
         } else {
             data.file_count += 1;
             data.scanned_file_bytes += entry.size;
+            throttled_progress(
+                progress_at,
+                on_progress,
+                ScanProgress {
+                    phase: "tree",
+                    file_count: data.file_count,
+                    dir_count: data.dir_count,
+                    scanned_bytes: data.scanned_file_bytes,
+                },
+                false,
+            );
             data.largest_files.push(FileSize {
                 path: entry.path.clone(),
                 size: entry.size,
