@@ -41,7 +41,7 @@
         "icon": "code",
         "color": "terminal.ansiRed",
         "commands": [
-          "claude --effort low --model opusplan /git-commit-ascii"
+          "claude --effort low --model sonnet /git-commit-ascii"
         ]
       },
       {

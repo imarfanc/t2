@@ -60,14 +60,12 @@ ZSH</code></pre>
 <pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></pre>
 <p>Press <strong>Enter</strong> to accept the default. This installs <code>rustc</code>, <code>cargo</code>, and <code>rustup</code>.</p>
 
-<h2>3. Load Rust into your shell</h2>
-<pre><code class="language-bash">source "$HOME/.cargo/env"</code></pre>
+<h2>3. Load Rust into your shell &amp; verify</h2>
+<pre><code class="language-bash">source "$HOME/.cargo/env"
+rustc --version
+cargo --version</code></pre>
 
-<h2>4. Verify</h2>
-<pre data-run-id="rustc_version"><code class="language-bash">rustc --version</code></pre>
-<pre data-run-id="cargo_version"><code class="language-bash">cargo --version</code></pre>
-
-<h2>5. Keep it updated</h2>
+<h2>4. Keep it updated</h2>
 <pre><code class="language-bash">rustup update</code></pre>
 
 <div class="tip">

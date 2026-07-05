@@ -64,7 +64,7 @@
   "diffEditor.hideUnchangedRegions.enabled": true,
 
   // ╭───────────────────── Terminal Configuration ─────────────────────╮
-  // "terminal.integrated.lineHeight": 1.5,
+  // "terminal.integrated.lineHeight": 1,
   "terminal.integrated.lineHeight": 1,
   "terminal.integrated.fontSize": 14,
   // "terminal.integrated.fontSize": 16,
