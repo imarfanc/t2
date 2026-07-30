@@ -1,35 +1,19 @@
 ---
-title: "uv"
+title: "uv-scanner"
 sort: 4
-category: "macOS reset"
-description: "install uv"
+category: "tools"
+description: "Python implementation of directory scanner executed via uv with Rich"
 date: 2026-5-1
 tags:
-  - macOS
-  - reset
-  - uv
-  - install
   - python
+  - uv
+  - rich
+  - scanner
 ---
 
-# install uv
+# Python / uv Directory Scanner
 
-## using curl
-
-```sh
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source "$HOME/.local/bin/env"
-```
-
-## using brew
-
-```sh
-brew install uv
-```
-
-## backup dir
-
-Same directory scanner as [deno.md](./deno.md); uses Rich for tables, panels, and tree output. `OUTPUT_DIR` accepts `~` or `$HOME` via `Path.expanduser()`.
+Python directory scanner using `rich` for tables, panels, and tree output. `OUTPUT_DIR` accepts `~` or `$HOME` via `Path.expanduser()`.
 
 ```sh
 uv run --with rich python3 - <<'PY'

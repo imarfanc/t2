@@ -1,6 +1,25 @@
-# warp (keyboard,trackpad)
+---
+title: "keyboard-trackpad"
+sort: "2"
+icon: "glyphs-poly:two"
+category: rare
+description: "macOS keyboard and trackpad defaults (tap to click, key repeat, scroll bars, save dialogs) via `defaults write`"
+date: 2026-5-1
+tags:
+  - macOS
+  - reset
+  - keyboard
+  - trackpad
+  - defaults
+name: keyboard-trackpad
+subcategory: macOS-reset-26.7b
+subsubcategory: _bootstrap
+visibility: public
+---
 
-## some macos settings
+# Keyboard & Trackpad Settings
+
+## how to run multi-line scripts in terminal
 
 - If you are pasting this into Warp/zsh directly, an even safer way is to run it as:
 
@@ -10,9 +29,12 @@ bash <<'EOF'
 EOF
 ```
 
-```bash
-#!/usr/bin/env bash
+## macOS defaults
 
+Paste the whole block into zsh. The quoted heredoc avoids `zsh: event not found` from `!` history expansion.
+
+```sh
+bash <<'EOF'
 report_default() {
   local domain="$1"
   local key="$2"
@@ -87,4 +109,5 @@ defaults read NSGlobalDomain KeyRepeat 2>/dev/null || echo "KeyRepeat = <missing
 defaults read NSGlobalDomain InitialKeyRepeat 2>/dev/null || echo "InitialKeyRepeat = <missing>"
 defaults read NSGlobalDomain AppleKeyboardUIMode 2>/dev/null || echo "AppleKeyboardUIMode = <missing>"
 defaults read NSGlobalDomain com.apple.keyboard.fnState 2>/dev/null || echo "com.apple.keyboard.fnState = <missing>"
+EOF
 ```

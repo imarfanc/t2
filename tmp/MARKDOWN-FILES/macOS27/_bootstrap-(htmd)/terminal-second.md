@@ -1,23 +1,24 @@
 ---
-title: "2"
-sort: 2
-category: "macOS reset"
-description: "the second file in the macOS reset project"
+title: "terminal-second"
+sort: "4"
+category: rare
+description: "Initial file and directory cleanup script"
 date: 2026-5-1
 tags:
   - macOS
   - reset
-  - 2
-  - two
-  - second
-  - second file
+  - cleanup
+  - terminal
+name: terminal-second
+icon: "glyphs-poly:four"
+subcategory: macOS-reset-26.7b
+subsubcategory: _bootstrap
+visibility: public
 ---
 
-# two
+# Terminal Second Setup
 
-## delete files & dirs
-
-`#sudo find ~/Movies ~/Music ~/Public ~/Downloads ~/Desktop ~/Documents ~/Pictures \`
+## Delete Files & Directories
 
 ```sh
 bash <<'EOF'
@@ -47,37 +48,4 @@ done < <(sudo find ~ \
   -name ".DS_Store" -type f -print0 2>/dev/null)
 printf "\r  deleted %d .DS_Store files                    \n" "$ds_count"
 EOF
-```
-
-## create some folders/files
-
-### download warp-251224 repo
-
-- [https://github.com/imarfanc/warp-251224](https://github.com/imarfanc/warp-251224)
-- [https://github.com/imarfanc/warp-251224/archive/refs/heads/main.zip](https://github.com/imarfanc/warp-251224/archive/refs/heads/main.zip)
-
-```sh
-mkdir -p ~/Developer/macos-reset
-mkdir -p ~/Developer/gh
-
-touch .zprofile
-touch .zshrc
-
-cat .zprofile222
-cat .zprofile
-cat .zshrc
-
-cd ~/Developer/gh
-curl -fsSL \
-  https://github.com/imarfanc/warp-251224/archive/refs/heads/main.zip \
-  -o warp-251224.zip
-unzip warp-251224.zip
-rm warp-251224.zip
-
-open ~/Desktop
-open ~/Developer
-open ~/Documents
-open ~/Downloads
-open ~
-cd
 ```

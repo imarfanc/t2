@@ -1,227 +1,19 @@
 ---
-title: "go"
-sort: 4
-category: "macOS reset"
-description: "install go"
+title: "go-scanner"
+sort: 2
+category: "tools"
+description: "Go implementation of directory scanner using lipgloss and bubbletea"
 date: 2026-5-1
 tags:
-    - macOS
-    - reset
-    - go
-    - install
-    - golang
+  - go
+  - scanner
+  - lipgloss
 ---
 
-# install go
+# Go Directory Scanner
 
-## using brew
-
-```sh
-brew install go
-```
-
-## using curl
-
-Your error happened because **interactive zsh treats `#` as a command unless
-`interactivecomments` is enabled**. Best fix: paste the whole installer as a
-**heredoc** so comments are safe.
-
-On zsh the version URL **must** use single quotes (`'...?m=text'`) or `?`
-triggers a glob error — the script below already does that.
-
-Paste this whole thing:
-
-```sh
-zsh <<'ZSH'
-set -euo pipefail
-setopt interactivecomments 2>/dev/null || true
-
-bold=$'\033[1m'
-green=$'\033[32m'
-yellow=$'\033[33m'
-red=$'\033[31m'
-blue=$'\033[34m'
-reset=$'\033[0m'
-
-ok()   { printf "%s✓%s %s\n" "$green" "$reset" "$*"; }
-warn() { printf "%s!%s %s\n" "$yellow" "$reset" "$*"; }
-fail() { printf "%s✗%s %s\n" "$red" "$reset" "$*"; exit 1; }
-
-need_cmd() {
-  command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"
-}
-
-need_cmd curl
-need_cmd tar
-need_cmd awk
-need_cmd sudo
-need_cmd uname
-
-ARCH="$(uname -m)"
-
-case "$ARCH" in
-  arm64)
-    GOARCH="arm64"
-    ;;
-  x86_64)
-    GOARCH="amd64"
-    ;;
-  *)
-    fail "Unsupported Mac architecture: $ARCH"
-    ;;
-esac
-
-workdir="$HOME/Developer/go-tmp"
-mkdir -p "$workdir"
-
-printf "\n%sGo Official Installer for macOS%s\n" "$bold" "$reset"
-printf "%s──────────────────────────────%s\n\n" "$blue" "$reset"
-
-ok "Detected architecture: $ARCH → Go $GOARCH"
-
-VERSION="$(
-  curl -fsSL --retry 3 --connect-timeout 15 'https://go.dev/VERSION?m=text' \
-    | awk 'NR == 1 { print; exit }'
-)"
-
-case "$VERSION" in
-  go[0-9]*)
-    ok "Latest Go version: $VERSION"
-    ;;
-  *)
-    fail "Could not detect valid Go version. Got: ${VERSION:-empty}"
-    ;;
-esac
-
-TARBALL_URL="https://go.dev/dl/${VERSION}.darwin-${GOARCH}.tar.gz"
-TARBALL="$workdir/go.tar.gz"
-
-printf "\nDownloading:\n%s\n\n" "$TARBALL_URL"
-
-curl -fL --retry 3 --connect-timeout 15 "$TARBALL_URL" -o "$TARBALL"
-
-test -s "$TARBALL" || fail "Download failed or file is empty."
-
-ok "Downloaded tarball: $(du -h "$TARBALL" | awk '{print $1}')"
-
-printf "\nRequesting sudo once...\n"
-sudo -v
-
-printf "\nInstalling to /usr/local/go ...\n"
-
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf "$TARBALL"
-sudo chown -R root:wheel /usr/local/go 2>/dev/null || true
-
-test -x /usr/local/go/bin/go || fail "Go binary was not installed correctly."
-
-ok "Installed Go into /usr/local/go"
-
-PROFILE="$HOME/.zprofile"
-touch "$PROFILE"
-
-START_MARKER="# >>> official Go path >>>"
-END_MARKER="# <<< official Go path <<<"
-
-cleaned_profile="$workdir/zprofile.cleaned"
-
-awk -v start="$START_MARKER" -v end="$END_MARKER" '
-  $0 == start { skip = 1; next }
-  $0 == end { skip = 0; next }
-  skip != 1 { print }
-' "$PROFILE" > "$cleaned_profile"
-
-cat "$cleaned_profile" > "$PROFILE"
-
-cat >> "$PROFILE" <<'EOF'
-
-# >>> official Go path >>>
-export PATH="/usr/local/go/bin:$PATH"
-# <<< official Go path <<<
-EOF
-
-export PATH="/usr/local/go/bin:$PATH"
-hash -r 2>/dev/null || true
-rehash 2>/dev/null || true
-
-GO_BIN="$(command -v go || true)"
-GO_VERSION="$(go version 2>/dev/null || true)"
-GO_ROOT="$(go env GOROOT 2>/dev/null || true)"
-GO_PATH="$(go env GOPATH 2>/dev/null || true)"
-GO_ENV_ARCH="$(go env GOARCH 2>/dev/null || true)"
-GO_ENV_OS="$(go env GOOS 2>/dev/null || true)"
-
-printf "\n%sVisual Sanity Check%s\n" "$bold" "$reset"
-printf "%s────────────────────%s\n" "$blue" "$reset"
-
-printf "%-22s %s\n" "Expected version:" "$VERSION"
-printf "%-22s %s\n" "Active go:" "${GO_BIN:-not found}"
-printf "%-22s %s\n" "go version:" "${GO_VERSION:-failed}"
-printf "%-22s %s\n" "GOROOT:" "${GO_ROOT:-failed}"
-printf "%-22s %s\n" "GOPATH:" "${GO_PATH:-failed}"
-printf "%-22s %s\n" "GOOS / GOARCH:" "${GO_ENV_OS:-?} / ${GO_ENV_ARCH:-?}"
-
-printf "\n%sPATH priority check%s\n" "$bold" "$reset"
-printf "%s──────────────────%s\n" "$blue" "$reset"
-which -a go 2>/dev/null | awk '{ printf "%2d. %s\n", NR, $0 }' || true
-
-printf "\n"
-
-if [ "$GO_BIN" = "/usr/local/go/bin/go" ]; then
-  ok "Good: /usr/local/go/bin/go is first in PATH."
-else
-  warn "Go installed, but another go is first in PATH."
-  warn "Open a new terminal tab, then run: which go && go version"
-fi
-
-if printf "%s" "$GO_VERSION" | grep -q "$VERSION"; then
-  ok "Version check passed."
-else
-  fail "Version mismatch. Expected $VERSION but got: ${GO_VERSION:-nothing}"
-fi
-
-printf "\n%sDone.%s Open a new terminal tab and run:\n\n" "$green" "$reset"
-printf "  go version\n"
-printf "  which go\n\n"
-ZSH
-```
-
-### Why this is better
-
-- Keeps downloads and temp files under **`~/Developer/go-tmp`** (created if
-  missing; not deleted when the script finishes)
-- Works safely when pasted into **zsh**
-- Avoids the `zsh: command not found: #` problem
-- Detects Apple Silicon vs Intel Mac
-- Downloads the latest official Go release
-- Installs to `/usr/local/go`
-- Cleans old duplicate Go PATH blocks from `~/.zprofile`
-- Forces `/usr/local/go/bin` to the front of PATH
-- Shows a sanity-check table at the end
-- Shows all `go` binaries found with `which -a go` so you can spot conflicts
-  with Homebrew or old installs.
-
-## charm stack (optional)
-
-All from [Charm](https://charm.sh) — tools for pretty terminal UIs:
-
-| Tool                                                         | What it is                                                       | When you use it                           |
-| ------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------------------------------- |
-| **[lipgloss](https://github.com/charmbracelet/lipgloss)**    | Go library — borders, colors, tables (like CSS for the terminal) | Inside Go programs (this scanner uses it) |
-| **[Bubble Tea](https://github.com/charmbracelet/bubbletea)** | Go framework — event loop for interactive TUIs                   | Full apps (menus, forms, live updates)    |
-| **[Bubbles](https://github.com/charmbracelet/bubbles)**      | Go components for Bubble Tea — spinner, text input, lists, etc.  | Building blocks inside Bubble Tea apps    |
-
-**This doc:** the backup scanner pulls **lipgloss** + **bubbles/spinner** via
-`go get` — **brew or curl Go** is all you need.
-
-## backup dir
-
-Same directory scanner as [deno.md](./deno.md) and [uv.md](../1/uv.md); uses
-**lipgloss** + **Bubble Tea spinner** (Charm Go libs, like uv uses Rich).
-Dependencies are fetched with `go get` — works with brew or curl Go.
-`OUTPUT_DIR` is resolved with `os.UserHomeDir()`. The shell snippet writes
-`main.go` and the module under **`~/Developer/go-tmp`** (created if missing;
-left on disk after the run).
+Uses **lipgloss** + **Bubble Tea spinner** (Charm Go libs).
+`OUTPUT_DIR` is resolved dynamically with `os.UserHomeDir()`.
 
 ```sh
 TMP="$HOME/Developer/go-tmp"
@@ -862,21 +654,10 @@ func listDir(dir string) []entryInfo {
 	})
 	return out
 }
-
 GO
 ```
 
-## first run main.go
-
-```sh
-go mod init scan >/dev/null 2>&1 && \
-go get github.com/charmbracelet/lipgloss@v1.1.0 \
-       github.com/charmbracelet/bubbletea@v1.3.4 \
-       github.com/charmbracelet/bubbles/spinner@v0.20.0 >/dev/null 2>&1 && \
-go run "$HOME/Developer/go-tmp/main.go"
-```
-
-## subsequent run main.go
+## Running
 
 ```sh
 go run "$HOME/Developer/go-tmp/main.go"

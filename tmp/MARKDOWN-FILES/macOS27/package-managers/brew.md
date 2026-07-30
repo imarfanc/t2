@@ -1,26 +1,28 @@
 ---
 title: "brew"
-sort: 5
-category: "macOS reset"
-description: "install brew"
+sort: 1
+category: "package-managers"
+description: "Homebrew installation and configuration"
 date: 2026-5-1
 tags:
-    - macOS
-    - reset
-    - brew
-    - install
+  - macOS
+  - brew
+  - homebrew
+  - install
 ---
 
-# install brew
+# Homebrew Installation
 
-## brew
+- [Homebrew Official Site](https://brew.sh)
 
-- <https://brew.sh>
+## Installation
 
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 afplay /System/Library/Sounds/Funk.aiff
 ```
+
+## Shell Configuration
 
 ```sh
 echo >> "$HOME/.zprofile"

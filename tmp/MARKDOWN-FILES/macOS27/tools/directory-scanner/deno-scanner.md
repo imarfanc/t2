@@ -1,38 +1,26 @@
 ---
-title: "deno"
-sort: 5
-category: "macOS reset"
-description: "install deno"
+title: "deno-scanner"
+sort: 3
+category: "tools"
+description: "Deno TypeScript implementation of directory scanner"
 date: 2026-5-1
 tags:
-  - macOS
-  - reset
   - deno
-  - install
+  - typescript
+  - scanner
 ---
 
-# install deno
+# Deno Directory Scanner
 
-## using brew
-
-```sh
-brew install deno
-```
-
-## using curl
-
-```sh
-curl -fsSL https://deno.land/install.sh | sh
-```
-
-## backup dir
+Native TypeScript implementation of directory scanner using Deno APIs and standard library path resolution. `OUTPUT_DIR` path dynamically expands home directory path using `Deno.env.get("HOME")`.
 
 ```sh
 deno run --allow-read --allow-write --allow-env --allow-run - <<'TS'
 import * as path from "jsr:@std/path";
 
 const ROOT = ".";
-const OUTPUT_DIR = "/Users/arfan/Developer/macos-reset";   // can't use ~ or $HOME
+const HOME = Deno.env.get("HOME") ?? "";
+const OUTPUT_DIR = path.join(HOME, "Developer", "macos-reset");
 const SHOW_HIDDEN = true;
 const FOLLOW_SYMLINKS = false;
 const SCAN_EVERYTHING = false; // true = scan everything (cycle-safe), false = respect MAX_DEPTH
@@ -538,21 +526,4 @@ TS
 
 afplay /System/Library/Sounds/Funk.aiff
 afplay /System/Library/Sounds/Ping.aiff
-```
-
-## opencode
-
-```bash
-printf '%s\n' '# zsh config' >> ~/.zshrc
-mkdir -p Developer/gh
-mkdir -p Developer/tmp1
-mkdir -p Developer/local
-cd Developer/gh/
-
-mkdir -p "$HOME/Developer/macos-reset/bak1"
-cp "$HOME/.zprofile" "$HOME/Developer/macos-reset/bak1/zprofile.txt"
-cp "$HOME/.zshrc" "$HOME/Developer/macos-reset/bak1/zshrc.txt"
-afplay /System/Library/Sounds/Funk.aiff
-source ~/.zshrc
-opencode
 ```
