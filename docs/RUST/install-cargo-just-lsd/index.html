@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install cargo, just, and lsd</title>
+<link rel="stylesheet" href="/docs/_shared/guide.css">
+<link rel="stylesheet" href="/docs/_shared/code-highlight.css">
+</head>
+<body>
+<p><a href="/docs/RUST/">← Back to Rust</a></p>
+<h1>Install cargo, just, and lsd</h1>
+<p class="intro"><code>just serve</code> builds the repo file server with <code>cargo</code>. <code>just</code> runs the recipes in the justfile. <code>lsd</code> lists directories. Install Rust first. The other two are single binaries in <code>~/.local/bin</code>.</p>
+
+<h2>1. Command line tools</h2>
+<p>Rust needs Apple's linker. Check whether the command line tools are already present.</p>
+<pre data-no-run><code class="language-bash">xcode-select -p</code></pre>
+<p>A path such as <code>/Library/Developer/CommandLineTools</code> means they are installed. If that command fails, install them and wait for the dialog to finish.</p>
+<pre data-no-run><code class="language-bash">xcode-select --install</code></pre>
+
+<h2>2. A directory on PATH</h2>
+<p><code>just</code> and <code>lsd</code> go in <code>~/.local/bin</code>. Create that directory. If it is missing from <code>PATH</code>, append it in <code>~/.zshenv</code> and reload the file.</p>
+<pre data-no-run><code class="language-bash">mkdir -p "$HOME/.local/bin"
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) printf '%s\n' 'export PATH="$HOME/.local/bin:$PATH"' &gt;&gt; "$HOME/.zshenv" ;;
+esac
+. "$HOME/.zshenv"</code></pre>
+
+<h2>3. Rust and cargo</h2>
+<p><a href="https://rustup.rs">rustup</a> installs the stable toolchain. <code>-y</code> accepts the defaults, so the installer does not wait for Enter.</p>
+<pre data-no-run><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y</code></pre>
+<p>That installs <code>rustc</code>, <code>cargo</code>, and <code>rustup</code> into <code>~/.cargo/bin</code>. The installer adds this line to <code>~/.zshenv</code>, <code>~/.bashrc</code>, and <code>~/.profile</code>.</p>
+<pre data-no-run><code class="language-bash">. "$HOME/.cargo/env"</code></pre>
+<p>A terminal that was already open still has the old <code>PATH</code>. Load the env file, then print the versions.</p>
+<pre data-no-run><code class="language-bash">. "$HOME/.cargo/env"
+rustc --version
+cargo --version</code></pre>
+<p>Update the toolchain later with one command.</p>
+<pre data-no-run><code class="language-bash">rustup update</code></pre>
+<p><code>just</code> runs each recipe with <code>bash -c</code>. That bash does not read <code>~/.bashrc</code>. It inherits <code>PATH</code> from the zsh that started <code>just</code>. Source <code>~/.cargo/env</code> in that zsh before <code>just serve</code> when cargo was installed in the same session.</p>
+
+<h2>4. just</h2>
+<p>Install the binary from <a href="https://just.systems">just.systems</a> into <code>~/.local/bin</code>.</p>
+<pre data-no-run><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to "$HOME/.local/bin"
+just --version</code></pre>
+<p>The justfile also lists the Homebrew command, for a machine that already has Homebrew.</p>
+<pre data-no-run><code class="language-bash">brew install just</code></pre>
+<p>From the repo root, <code>just</code> lists recipes. <code>just serve</code> runs <code>cargo run --release</code> on <code>server/Cargo.toml</code> and serves the repo at <a href="http://localhost:8008">http://localhost:8008</a>.</p>
+
+<h2>5. lsd</h2>
+<p><a href="https://github.com/lsd-rs/lsd">lsd</a> 1.2.0 publishes a macOS archive. This Mac is Apple Silicon, so use the <code>aarch64</code> archive. The binary sits in a folder of the same name. <code>install</code> copies it into <code>~/.local/bin</code> and marks it executable.</p>
+<pre data-no-run><code class="language-bash">mkdir -p /tmp/lsd-install
+curl -fsSL -o /tmp/lsd-install/lsd.tar.gz "https://github.com/lsd-rs/lsd/releases/download/v1.2.0/lsd-v1.2.0-aarch64-apple-darwin.tar.gz"
+tar -xzf /tmp/lsd-install/lsd.tar.gz -C /tmp/lsd-install
+install -m 755 /tmp/lsd-install/lsd-v1.2.0-aarch64-apple-darwin/lsd "$HOME/.local/bin/lsd"
+lsd --version
+rm -rf /tmp/lsd-install</code></pre>
+<p>An Intel Mac uses <code>lsd-v1.2.0-x86_64-apple-darwin.tar.gz</code> and the matching folder inside the archive. Newer tags are on the <a href="https://github.com/lsd-rs/lsd/releases">releases page</a>.</p>
+<p>Homebrew installs the same program in one command.</p>
+<pre data-no-run><code class="language-bash">brew install lsd</code></pre>
+<p>After <code>cargo</code> is on <code>PATH</code>, compiling the crate also works. The binary lands in <code>~/.cargo/bin</code>.</p>
+<pre data-no-run><code class="language-bash">cargo install lsd</code></pre>
+
+<h2>6. Confirm</h2>
+<pre data-no-run><code class="language-bash">rustc --version
+cargo --version
+just --version
+lsd --version</code></pre>
+<p>On this machine those commands print Rust 1.99.1, just 1.59.0, and lsd 1.2.0. A later install can print newer versions.</p>
+
+<p style="margin-top:3rem"><a href="/docs/RUST/">Back to Rust</a></p>
+
+<script src="/docs/_shared/code-highlight.js"></script>
+<script src="/docs/_shared/guide.js"></script>
+</body>
+</html>
